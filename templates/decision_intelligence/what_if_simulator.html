@@ -1,0 +1,1277 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What-If Simulator | Smart Business Intelligence</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-base: #040911;
+            --bg-surface: #07111f;
+            --bg-card: rgba(11, 23, 42, 0.72);
+            --bg-card-hover: rgba(16, 32, 59, 0.85);
+
+            /* Deep Dark KPI Surfaces */
+            --bg-kpi-card: #050d18;
+            --border-kpi: rgba(255, 255, 255, 0.06);
+
+            --border-subtle: rgba(79, 163, 255, 0.14);
+            --border-focus: rgba(79, 163, 255, 0.45);
+            
+            --accent-blue: #4fa3ff;
+            --accent-cyan: #22d3ee;
+            --accent-purple: #8b5cf6;
+            --accent-gradient: linear-gradient(135deg, #4fa3ff 0%, #22d3ee 100%);
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: rgba(190, 211, 235, 0.65);
+            
+            --status-green: #10b981;
+            --status-yellow: #f59e0b;
+            --status-red: #ff5263;
+
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(79, 163, 255, 0.12), transparent),
+                radial-gradient(circle 600px at 0% 100%, rgba(34, 211, 238, 0.04), transparent);
+            background-attachment: fixed;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Glow & Entrance Animations */
+        @keyframes subtlePulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.08); }
+        }
+
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-up {
+            animation: cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* App Layout */
+        .app-layout {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 270px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 1000;
+            padding: 1.75rem 1.25rem;
+        }
+
+        .main-content {
+            margin-left: 270px;
+            flex: 1;
+            width: calc(100% - 270px);
+            min-height: 100vh;
+            padding: 2.5rem 3.5rem;
+            overflow-y: auto;
+        }
+
+        .page-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 2rem;
+            gap: 24px;
+        }
+
+        .header-content {
+            max-width: 750px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--accent-cyan);
+            margin-bottom: 0.65rem;
+            text-transform: uppercase;
+        }
+
+        .eyebrow-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan);
+            animation: subtlePulse 2.5s infinite;
+        }
+
+        .page-title {
+            font-size: 2.15rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+            margin-bottom: 0.4rem;
+        }
+
+        .page-description {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: rgba(79, 163, 255, 0.08);
+            border: 1px solid var(--border-subtle);
+            color: var(--accent-blue);
+            font-size: 0.8rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+        }
+
+        /* Messages */
+        .messages {
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            background: rgba(79, 163, 255, 0.08);
+            border: 1px solid var(--border-subtle);
+            color: #dbeafe;
+        }
+
+        .message.success {
+            border-color: rgba(16, 185, 129, 0.25);
+            background: rgba(16, 185, 129, 0.08);
+            color: #6ee7b7;
+        }
+
+        .message.error {
+            border-color: rgba(255, 82, 99, 0.25);
+            background: rgba(255, 82, 99, 0.08);
+            color: #fca5a5;
+        }
+
+        .message.warning {
+            border-color: rgba(245, 158, 11, 0.25);
+            background: rgba(245, 158, 11, 0.08);
+            color: #fde047;
+        }
+
+        /* Panels */
+        .panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            position: relative;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            padding: 1.75rem;
+            margin-bottom: 2rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .panel:hover {
+            border-color: var(--border-focus);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+        }
+
+        .section-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            gap: 16px;
+        }
+
+        .section-heading-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-icon {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border-radius: 10px;
+            background: rgba(79, 163, 255, 0.08);
+            border: 1px solid rgba(79, 163, 255, 0.2);
+            color: var(--accent-cyan);
+            font-size: 16px;
+        }
+
+        .section-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .section-subtitle {
+            margin-top: 3px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .selector-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) auto;
+            gap: 1.25rem;
+            align-items: flex-end;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .field select,
+        .field-control {
+            width: 100%;
+            height: 44px;
+            padding: 0 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-subtle);
+            background-color: var(--bg-surface);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234fa3ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            transition: all 0.2s ease;
+        }
+
+        .field select:focus,
+        .field-control:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(79, 163, 255, 0.15);
+        }
+
+        .field select option {
+            background: #07111f;
+            color: #f8fafc;
+        }
+
+        .action-button {
+            height: 44px;
+            padding: 0 22px;
+            border: none;
+            border-radius: var(--radius-md);
+            background: var(--accent-gradient);
+            color: #040911;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+            box-shadow: 0 4px 18px rgba(34, 211, 238, 0.25);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+        }
+
+        .action-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(79, 163, 255, 0.35);
+        }
+
+        .action-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Dataset Info Card */
+        .dataset-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 2rem;
+            padding: 1.25rem 1.5rem;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+        }
+
+        .dataset-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .dataset-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 18px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .dataset-meta strong {
+            color: #dbeafe;
+        }
+
+        .version-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            padding: 0.3rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(34, 211, 238, 0.08);
+            border: 1px solid rgba(34, 211, 238, 0.25);
+            color: var(--accent-cyan);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* Simulation Layout */
+        .simulation-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .panel-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .panel-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .panel-description {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+            line-height: 1.5;
+        }
+
+        .result-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 0.75rem;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .result-status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        /* Assumptions Rows */
+        .assumption-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .assumption-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 110px;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: var(--radius-md);
+            background: rgba(7, 17, 31, 0.6);
+        }
+
+        .assumption-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .assumption-help {
+            margin-top: 2px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .percentage-input {
+            width: 100%;
+            height: 38px;
+            padding: 0 10px;
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            background: rgba(4, 11, 21, 0.76);
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            text-align: right;
+            outline: none;
+        }
+
+        .percentage-input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 2px rgba(79, 163, 255, 0.15);
+        }
+
+        .assumption-note {
+            margin-top: 15px;
+            padding: 12px 14px;
+            border-left: 3px solid var(--accent-blue);
+            border-radius: 8px;
+            background: rgba(79, 163, 255, 0.05);
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .simulate-button-wrap {
+            margin-top: 1.5rem;
+        }
+
+        .simulate-button {
+            width: 100%;
+            height: 46px;
+        }
+
+        /* DARK THEME KPI METRICS GRID */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .metric-card {
+            background-color: var(--bg-kpi-card);
+            border: 1px solid var(--border-kpi);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(79, 163, 255, 0.3);
+        }
+
+        .metric-label {
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .metric-values {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: flex-end;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .metric-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+        }
+
+        .metric-baseline {
+            margin-top: 4px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .metric-change {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .metric-change.positive { color: var(--status-green); }
+        .metric-change.negative { color: var(--status-red); }
+        .metric-change.neutral { color: var(--text-muted); }
+
+        /* Comparison Table */
+        .comparison-block {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .comparison-title {
+            margin-bottom: 0.75rem;
+            color: #ffffff;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .comparison-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .comparison-table {
+            width: 100%;
+            min-width: 520px;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            text-align: left;
+        }
+
+        .comparison-table th {
+            color: var(--text-dim);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .comparison-table td strong {
+            color: #ffffff;
+        }
+
+        .change-positive { color: var(--status-green) !important; font-weight: 700; }
+        .change-negative { color: var(--status-red) !important; font-weight: 700; }
+        .change-neutral { color: var(--text-muted) !important; font-weight: 700; }
+
+        /* Empty State */
+        .empty-result {
+            min-height: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            text-align: center;
+            border: 1px dashed var(--border-subtle);
+            border-radius: var(--radius-md);
+            background: rgba(7, 17, 31, 0.45);
+        }
+
+        .empty-icon {
+            width: 52px;
+            height: 52px;
+            display: grid;
+            place-items: center;
+            margin-bottom: 1rem;
+            border-radius: 50%;
+            border: 1px solid var(--border-subtle);
+            background: rgba(79, 163, 255, 0.08);
+            color: var(--accent-cyan);
+            font-size: 1.5rem;
+        }
+
+        .empty-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .empty-description {
+            max-width: 420px;
+            margin-top: 6px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* Saved Simulations */
+        .saved-panel {
+            margin-bottom: 2rem;
+        }
+
+        .saved-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .saved-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: center;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: var(--radius-md);
+            background: var(--bg-kpi-card);
+            transition: border-color 0.2s ease;
+        }
+
+        .saved-item:hover {
+            border-color: rgba(79, 163, 255, 0.25);
+        }
+
+        .saved-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .saved-meta {
+            margin-top: 4px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .saved-status {
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+            font-size: 0.75rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* Methodology */
+        .methodology {
+            padding: 1.5rem;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            background: var(--bg-card);
+        }
+
+        .methodology-title {
+            margin-bottom: 0.5rem;
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .methodology-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 1180px) {
+            .selector-grid { grid-template-columns: 1fr 1fr; }
+            .selector-action { grid-column: 1 / -1; }
+            .selector-action .action-button { width: 100%; }
+            .simulation-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar { position: relative; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-subtle); }
+            .main-content { margin-left: 0; width: 100%; padding: 1.5rem; }
+            .page-header { flex-direction: column; }
+            .dataset-info { flex-direction: column; align-items: flex-start; }
+        }
+
+        @media (max-width: 680px) {
+            .selector-grid { grid-template-columns: 1fr; }
+            .metrics-grid { grid-template-columns: 1fr; }
+            .assumption-row { grid-template-columns: 1fr; }
+            .percentage-input { text-align: left; }
+            .saved-item { grid-template-columns: 1fr; }
+            .saved-status { justify-self: start; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+        {% include "includes/smart_sidebar.html" %}
+    </aside>
+
+    <!-- RIGHT MAIN CONTENT -->
+    <main class="main-content">
+        <div class="page-container">
+
+            <!-- PAGE HEADER -->
+            <header class="page-header fade-up">
+                <div class="header-content">
+                    <div class="eyebrow">
+                        <span class="eyebrow-dot"></span>
+                        Decision Intelligence
+                    </div>
+                    <h1 class="page-title">What-If Simulator</h1>
+                    <p class="page-description">Explore hypothetical business changes and compare projected outcomes against baseline performance from your dataset.</p>
+                </div>
+                <div class="header-badge">
+                    <span>↗</span> Scenario Simulation
+                </div>
+            </header>
+
+            <!-- DJANGO MESSAGES -->
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="message {{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- DATASET SELECTOR -->
+            <section class="panel selector-panel fade-up">
+                <div class="section-heading">
+                    <div class="section-heading-left">
+                        <div class="section-icon">◈</div>
+                        <div>
+                            <div class="section-title">Select Dataset</div>
+                            <div class="section-subtitle">Choose the cleaned dataset and version used for this scenario model.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="get">
+                    <div class="selector-grid">
+                        <!-- DATASET -->
+                        <div class="field">
+                            <label class="field-label" for="dataset">Dataset</label>
+                            <select id="dataset" name="dataset" class="field-control" onchange="this.form.submit()">
+                                <option value="">Select dataset</option>
+                                {% for dataset in datasets %}
+                                    <option value="{{ dataset.id }}" {% if selected_dataset and selected_dataset.id == dataset.id %}selected{% endif %}>
+                                        {{ dataset.name }} — {{ dataset.dataset_type }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- VERSION -->
+                        <div class="field">
+                            <label class="field-label" for="version">Dataset Version</label>
+                            <select id="version" name="version" class="field-control" onchange="this.form.submit()" {% if not selected_dataset %}disabled{% endif %}>
+                                {% if versions %}
+                                    {% for version in versions %}
+                                        <option value="{{ version.id }}" {% if selected_version and selected_version.id == version.id %}selected{% endif %}>
+                                            Version {{ version.version_number }} — {{ version.version_type }}
+                                            {% if version.is_current %}· Current{% endif %}
+                                        </option>
+                                    {% endfor %}
+                                {% else %}
+                                    <option value="">No versions available</option>
+                                {% endif %}
+                            </select>
+                        </div>
+
+                        <!-- REFRESH -->
+                        <div class="selector-action">
+                            <button type="submit" class="action-button">Refresh Dataset</button>
+                        </div>
+                    </div>
+                </form>
+            </section>
+
+            <!-- DATASET INFORMATION -->
+            {% if selected_dataset %}
+                <section class="dataset-info fade-up">
+                    <div class="dataset-info-main">
+                        <div class="dataset-name">{{ selected_dataset.name }}</div>
+                        <div class="dataset-meta">
+                            <span>Type: <strong>{{ selected_dataset.dataset_type }}</strong></span>
+                            {% if selected_version %}
+                                <span>Rows: <strong>{{ selected_version.total_rows }}</strong></span>
+                                <span>Columns: <strong>{{ selected_version.total_columns }}</strong></span>
+                                <span>Quality: <strong>{{ selected_version.quality_score }}%</strong></span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if selected_version %}
+                        <div class="version-badge">
+                            Version {{ selected_version.version_number }} · {{ selected_version.version_type }}
+                            {% if selected_version.is_current %}· Current{% endif %}
+                        </div>
+                    {% endif %}
+                </section>
+            {% endif %}
+
+            <!-- SIMULATION GRID -->
+            <section class="simulation-grid fade-up">
+
+                <!-- ASSUMPTIONS -->
+                <div class="panel assumptions-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">Simulation Assumptions</div>
+                        <div class="panel-description">Enter percentage changes to test how different business assumptions could alter the baseline.</div>
+                    </div>
+
+                    <form method="post" id="simulation-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="simulate">
+                        <input type="hidden" name="dataset" value="{% if selected_dataset %}{{ selected_dataset.id }}{% endif %}">
+                        <input type="hidden" name="version" value="{% if selected_version %}{{ selected_version.id }}{% endif %}">
+
+                        <div class="assumption-list">
+                            <!-- SALES -->
+                            <div class="assumption-row">
+                                <div class="assumption-info">
+                                    <div class="assumption-name">Sales</div>
+                                    <div class="assumption-help">Increase or decrease total sales.</div>
+                                </div>
+                                <input class="percentage-input" type="number" step="0.01" name="sales_change" value="{{ assumptions.sales_change|default:0 }}" placeholder="0">
+                            </div>
+
+                            <!-- PROFIT -->
+                            <div class="assumption-row">
+                                <div class="assumption-info">
+                                    <div class="assumption-name">Profit</div>
+                                    <div class="assumption-help">Model a percentage change in profit.</div>
+                                </div>
+                                <input class="percentage-input" type="number" step="0.01" name="profit_change" value="{{ assumptions.profit_change|default:0 }}" placeholder="0">
+                            </div>
+
+                            <!-- COST -->
+                            <div class="assumption-row">
+                                <div class="assumption-info">
+                                    <div class="assumption-name">Cost</div>
+                                    <div class="assumption-help">Simulate higher or lower operational costs.</div>
+                                </div>
+                                <input class="percentage-input" type="number" step="0.01" name="cost_change" value="{{ assumptions.cost_change|default:0 }}" placeholder="0">
+                            </div>
+
+                            <!-- QUANTITY -->
+                            <div class="assumption-row">
+                                <div class="assumption-info">
+                                    <div class="assumption-name">Quantity</div>
+                                    <div class="assumption-help">Change units or quantities sold.</div>
+                                </div>
+                                <input class="percentage-input" type="number" step="0.01" name="quantity_change" value="{{ assumptions.quantity_change|default:0 }}" placeholder="0">
+                            </div>
+
+                            <!-- CUSTOMERS -->
+                            <div class="assumption-row">
+                                <div class="assumption-info">
+                                    <div class="assumption-name">Customers</div>
+                                    <div class="assumption-help">Simulate growth or contraction in accounts.</div>
+                                </div>
+                                <input class="percentage-input" type="number" step="0.01" name="customer_change" value="{{ assumptions.customer_change|default:0 }}" placeholder="0">
+                            </div>
+
+                            <!-- ORDERS -->
+                            <div class="assumption-row">
+                                <div class="assumption-info">
+                                    <div class="assumption-name">Orders</div>
+                                    <div class="assumption-help">Model changes in order transactions.</div>
+                                </div>
+                                <input class="percentage-input" type="number" step="0.01" name="order_change" value="{{ assumptions.order_change|default:0 }}" placeholder="0">
+                            </div>
+
+                            <!-- MARKETING SPEND -->
+                            <div class="assumption-row">
+                                <div class="assumption-info">
+                                    <div class="assumption-name">Marketing Spend</div>
+                                    <div class="assumption-help">Test changes in marketing budget.</div>
+                                </div>
+                                <input class="percentage-input" type="number" step="0.01" name="marketing_spend_change" value="{{ assumptions.marketing_spend_change|default:0 }}" placeholder="0">
+                            </div>
+
+                            <!-- RETURNS -->
+                            <div class="assumption-row">
+                                <div class="assumption-info">
+                                    <div class="assumption-name">Returns</div>
+                                    <div class="assumption-help">Simulate an increase or reduction in returns.</div>
+                                </div>
+                                <input class="percentage-input" type="number" step="0.01" name="returns_change" value="{{ assumptions.returns_change|default:0 }}" placeholder="0">
+                            </div>
+                        </div>
+
+                        <div class="assumption-note">
+                            Positive values represent increases and negative values represent decreases. The simulation only calculates hypothetical projections without modifying underlying datasets.
+                        </div>
+
+                        <div class="simulate-button-wrap">
+                            <button type="submit" class="action-button primary simulate-button" {% if not selected_dataset or not selected_version %}disabled{% endif %}>
+                                <span>▶</span> Run Simulation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- RESULTS -->
+                <div class="panel results-panel">
+                    {% if simulation_result %}
+                        <div class="panel-header">
+                            <div class="panel-title">Simulation Results</div>
+                            <div class="panel-description">Baseline performance compared with the simulated scenario.</div>
+                            <div class="result-status">
+                                <span class="result-status-dot"></span>
+                                Simulation Completed
+                            </div>
+                        </div>
+
+                        <!-- DARK THEME METRIC CARDS -->
+                        <div class="metrics-grid">
+                            {% if simulation_result.summary.records %}
+                                <div class="metric-card">
+                                    <div class="metric-label">Records</div>
+                                    <div class="metric-values">
+                                        <div>
+                                            <div class="metric-value">{{ simulation_result.summary.records.simulated|floatformat:0 }}</div>
+                                            <div class="metric-baseline">Baseline: {{ simulation_result.summary.records.baseline|floatformat:0 }}</div>
+                                        </div>
+                                        <div class="metric-change {% if simulation_result.summary.records.percentage_change > 0 %}positive{% elif simulation_result.summary.records.percentage_change < 0 %}negative{% else %}neutral{% endif %}">
+                                            {% if simulation_result.summary.records.percentage_change > 0 %}+{% endif %}{{ simulation_result.summary.records.percentage_change }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if simulation_result.summary.sales %}
+                                <div class="metric-card">
+                                    <div class="metric-label">Sales</div>
+                                    <div class="metric-values">
+                                        <div>
+                                            <div class="metric-value">{{ simulation_result.summary.sales.simulated|floatformat:2 }}</div>
+                                            <div class="metric-baseline">Baseline: {{ simulation_result.summary.sales.baseline|floatformat:2 }}</div>
+                                        </div>
+                                        <div class="metric-change {% if simulation_result.summary.sales.percentage_change > 0 %}positive{% elif simulation_result.summary.sales.percentage_change < 0 %}negative{% else %}neutral{% endif %}">
+                                            {% if simulation_result.summary.sales.percentage_change > 0 %}+{% endif %}{{ simulation_result.summary.sales.percentage_change }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if simulation_result.summary.profit %}
+                                <div class="metric-card">
+                                    <div class="metric-label">Profit</div>
+                                    <div class="metric-values">
+                                        <div>
+                                            <div class="metric-value">{{ simulation_result.summary.profit.simulated|floatformat:2 }}</div>
+                                            <div class="metric-baseline">Baseline: {{ simulation_result.summary.profit.baseline|floatformat:2 }}</div>
+                                        </div>
+                                        <div class="metric-change {% if simulation_result.summary.profit.percentage_change > 0 %}positive{% elif simulation_result.summary.profit.percentage_change < 0 %}negative{% else %}neutral{% endif %}">
+                                            {% if simulation_result.summary.profit.percentage_change > 0 %}+{% endif %}{{ simulation_result.summary.profit.percentage_change }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if simulation_result.summary.cost %}
+                                <div class="metric-card">
+                                    <div class="metric-label">Cost</div>
+                                    <div class="metric-values">
+                                        <div>
+                                            <div class="metric-value">{{ simulation_result.summary.cost.simulated|floatformat:2 }}</div>
+                                            <div class="metric-baseline">Baseline: {{ simulation_result.summary.cost.baseline|floatformat:2 }}</div>
+                                        </div>
+                                        <div class="metric-change {% if simulation_result.summary.cost.percentage_change > 0 %}positive{% elif simulation_result.summary.cost.percentage_change < 0 %}negative{% else %}neutral{% endif %}">
+                                            {% if simulation_result.summary.cost.percentage_change > 0 %}+{% endif %}{{ simulation_result.summary.cost.percentage_change }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if simulation_result.summary.quantity %}
+                                <div class="metric-card">
+                                    <div class="metric-label">Quantity</div>
+                                    <div class="metric-values">
+                                        <div>
+                                            <div class="metric-value">{{ simulation_result.summary.quantity.simulated|floatformat:2 }}</div>
+                                            <div class="metric-baseline">Baseline: {{ simulation_result.summary.quantity.baseline|floatformat:2 }}</div>
+                                        </div>
+                                        <div class="metric-change {% if simulation_result.summary.quantity.percentage_change > 0 %}positive{% elif simulation_result.summary.quantity.percentage_change < 0 %}negative{% else %}neutral{% endif %}">
+                                            {% if simulation_result.summary.quantity.percentage_change > 0 %}+{% endif %}{{ simulation_result.summary.quantity.percentage_change }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if simulation_result.summary.customers %}
+                                <div class="metric-card">
+                                    <div class="metric-label">Customers</div>
+                                    <div class="metric-values">
+                                        <div>
+                                            <div class="metric-value">{{ simulation_result.summary.customers.simulated|floatformat:0 }}</div>
+                                            <div class="metric-baseline">Baseline: {{ simulation_result.summary.customers.baseline|floatformat:0 }}</div>
+                                        </div>
+                                        <div class="metric-change {% if simulation_result.summary.customers.percentage_change > 0 %}positive{% elif simulation_result.summary.customers.percentage_change < 0 %}negative{% else %}neutral{% endif %}">
+                                            {% if simulation_result.summary.customers.percentage_change > 0 %}+{% endif %}{{ simulation_result.summary.customers.percentage_change }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if simulation_result.summary.orders %}
+                                <div class="metric-card">
+                                    <div class="metric-label">Orders</div>
+                                    <div class="metric-values">
+                                        <div>
+                                            <div class="metric-value">{{ simulation_result.summary.orders.simulated|floatformat:0 }}</div>
+                                            <div class="metric-baseline">Baseline: {{ simulation_result.summary.orders.baseline|floatformat:0 }}</div>
+                                        </div>
+                                        <div class="metric-change {% if simulation_result.summary.orders.percentage_change > 0 %}positive{% elif simulation_result.summary.orders.percentage_change < 0 %}negative{% else %}neutral{% endif %}">
+                                            {% if simulation_result.summary.orders.percentage_change > 0 %}+{% endif %}{{ simulation_result.summary.orders.percentage_change }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if simulation_result.summary.marketing_spend %}
+                                <div class="metric-card">
+                                    <div class="metric-label">Marketing Spend</div>
+                                    <div class="metric-values">
+                                        <div>
+                                            <div class="metric-value">{{ simulation_result.summary.marketing_spend.simulated|floatformat:2 }}</div>
+                                            <div class="metric-baseline">Baseline: {{ simulation_result.summary.marketing_spend.baseline|floatformat:2 }}</div>
+                                        </div>
+                                        <div class="metric-change {% if simulation_result.summary.marketing_spend.percentage_change > 0 %}positive{% elif simulation_result.summary.marketing_spend.percentage_change < 0 %}negative{% else %}neutral{% endif %}">
+                                            {% if simulation_result.summary.marketing_spend.percentage_change > 0 %}+{% endif %}{{ simulation_result.summary.marketing_spend.percentage_change }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if simulation_result.summary.returns %}
+                                <div class="metric-card">
+                                    <div class="metric-label">Returns</div>
+                                    <div class="metric-values">
+                                        <div>
+                                            <div class="metric-value">{{ simulation_result.summary.returns.simulated|floatformat:2 }}</div>
+                                            <div class="metric-baseline">Baseline: {{ simulation_result.summary.returns.baseline|floatformat:2 }}</div>
+                                        </div>
+                                        <div class="metric-change {% if simulation_result.summary.returns.percentage_change > 0 %}positive{% elif simulation_result.summary.returns.percentage_change < 0 %}negative{% else %}neutral{% endif %}">
+                                            {% if simulation_result.summary.returns.percentage_change > 0 %}+{% endif %}{{ simulation_result.summary.returns.percentage_change }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if simulation_result.summary.average_order_value %}
+                                <div class="metric-card">
+                                    <div class="metric-label">Average Order Value</div>
+                                    <div class="metric-values">
+                                        <div>
+                                            <div class="metric-value">{{ simulation_result.summary.average_order_value.simulated|floatformat:2 }}</div>
+                                            <div class="metric-baseline">Baseline: {{ simulation_result.summary.average_order_value.baseline|floatformat:2 }}</div>
+                                        </div>
+                                        <div class="metric-change {% if simulation_result.summary.average_order_value.percentage_change > 0 %}positive{% elif simulation_result.summary.average_order_value.percentage_change < 0 %}negative{% else %}neutral{% endif %}">
+                                            {% if simulation_result.summary.average_order_value.percentage_change > 0 %}+{% endif %}{{ simulation_result.summary.average_order_value.percentage_change }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if simulation_result.summary.profit_margin %}
+                                <div class="metric-card">
+                                    <div class="metric-label">Profit Margin</div>
+                                    <div class="metric-values">
+                                        <div>
+                                            <div class="metric-value">{{ simulation_result.summary.profit_margin.simulated|floatformat:2 }}%</div>
+                                            <div class="metric-baseline">Baseline: {{ simulation_result.summary.profit_margin.baseline|floatformat:2 }}%</div>
+                                        </div>
+                                        <div class="metric-change {% if simulation_result.summary.profit_margin.percentage_change > 0 %}positive{% elif simulation_result.summary.profit_margin.percentage_change < 0 %}negative{% else %}neutral{% endif %}">
+                                            {% if simulation_result.summary.profit_margin.percentage_change > 0 %}+{% endif %}{{ simulation_result.summary.profit_margin.percentage_change }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if simulation_result.summary.return_rate %}
+                                <div class="metric-card">
+                                    <div class="metric-label">Return Rate</div>
+                                    <div class="metric-values">
+                                        <div>
+                                            <div class="metric-value">{{ simulation_result.summary.return_rate.simulated|floatformat:2 }}%</div>
+                                            <div class="metric-baseline">Baseline: {{ simulation_result.summary.return_rate.baseline|floatformat:2 }}%</div>
+                                        </div>
+                                        <div class="metric-change {% if simulation_result.summary.return_rate.percentage_change > 0 %}positive{% elif simulation_result.summary.return_rate.percentage_change < 0 %}negative{% else %}neutral{% endif %}">
+                                            {% if simulation_result.summary.return_rate.percentage_change > 0 %}+{% endif %}{{ simulation_result.summary.return_rate.percentage_change }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- COMPARISON TABLE -->
+                        {% if simulation_result.summary %}
+                            <div class="comparison-block">
+                                <div class="comparison-title">Baseline vs Simulated Breakdown</div>
+                                <div class="comparison-table-wrapper">
+                                    <table class="comparison-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Metric</th>
+                                                <th>Baseline</th>
+                                                <th>Simulated</th>
+                                                <th>Absolute Delta</th>
+                                                <th>Percent Delta</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for key, result in simulation_result.summary.items %}
+                                                <tr>
+                                                    <td>{{ key|title }}</td>
+                                                    <td>{{ result.baseline|floatformat:2 }}</td>
+                                                    <td><strong>{{ result.simulated|floatformat:2 }}</strong></td>
+                                                    <td>
+                                                        {% if result.absolute_change > 0 %}+{% endif %}{{ result.absolute_change|floatformat:2 }}
+                                                    </td>
+                                                    <td class="{% if result.percentage_change > 0 %}change-positive{% elif result.percentage_change < 0 %}change-negative{% else %}change-neutral{% endif %}">
+                                                        {% if result.percentage_change > 0 %}+{% endif %}{{ result.percentage_change|floatformat:2 }}%
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <!-- EMPTY RESULT -->
+                        <div class="panel-header">
+                            <div class="panel-title">Simulation Results</div>
+                            <div class="panel-description">Run a scenario to compare baseline performance with hypothetical outcomes.</div>
+                        </div>
+
+                        <div class="empty-result">
+                            <div class="empty-icon">◇</div>
+                            <div class="empty-title">No Simulation Active</div>
+                            <div class="empty-description">Select your dataset version, set your percentage assumptions, and click <strong>Run Simulation</strong> to view business projections.</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- SAVED SIMULATIONS -->
+            {% if simulations %}
+                <section class="panel saved-panel fade-up">
+                    <div class="panel-header">
+                        <div class="panel-title">Recent Simulations</div>
+                        <div class="panel-description">Previously executed scenarios for the selected dataset and version.</div>
+                    </div>
+
+                    <div class="saved-list">
+                        {% for simulation in simulations %}
+                            <div class="saved-item">
+                                <div>
+                                    <div class="saved-name">{{ simulation.name }}</div>
+                                    <div class="saved-meta">
+                                        Version {{ simulation.dataset_version.version_number }} · {{ simulation.created_at|date:"d M Y, H:i" }}
+                                    </div>
+                                </div>
+                                <div class="saved-status">{{ simulation.status }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+
+            <!-- METHODOLOGY -->
+            <section class="methodology fade-up">
+                <div class="methodology-title">Simulation Methodology</div>
+                <div class="methodology-text">
+                    The What-If Simulator treats the selected dataset version as an immutable baseline and dynamically projects mathematical transformations across defined metric drivers. All scenario projections are stored as analytical iterations without mutating your underlying records.
+                </div>
+            </section>
+
+        </div>
+    </main>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const datasetSelect = document.getElementById("dataset");
+        const versionSelect = document.getElementById("version");
+
+        if (datasetSelect && versionSelect) {
+            datasetSelect.addEventListener("change", function () {
+                versionSelect.disabled = !this.value;
+            });
+        }
+
+        const simulationForm = document.getElementById("simulation-form");
+        if (simulationForm) {
+            simulationForm.addEventListener("submit", function () {
+                const button = simulationForm.querySelector('button[type="submit"]');
+                if (!button || button.disabled) return;
+
+                button.dataset.originalText = button.innerHTML;
+                button.innerHTML = "<span>⟳</span> Running Simulation...";
+                button.disabled = true;
+            });
+        }
+    });
+</script>
+
+</body>
+</html>

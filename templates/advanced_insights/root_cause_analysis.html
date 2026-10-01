@@ -1,0 +1,957 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Root Cause Analysis | Smart Business Intelligence</title>
+
+    <!-- Google Fonts & Chart.js -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-base: #040911;
+            --bg-surface: #07111f;
+            --bg-card: rgba(11, 23, 42, 0.72);
+            --bg-card-hover: rgba(16, 32, 59, 0.85);
+
+            /* Deep Dark KPI Surfaces */
+            --bg-kpi-card: #050d18;
+            --border-kpi: rgba(255, 255, 255, 0.06);
+
+            --border-subtle: rgba(79, 163, 255, 0.14);
+            --border-focus: rgba(79, 163, 255, 0.45);
+            
+            --accent-blue: #4fa3ff;
+            --accent-cyan: #22d3ee;
+            --accent-purple: #8b5cf6;
+            --accent-gradient: linear-gradient(135deg, #4fa3ff 0%, #22d3ee 100%);
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: rgba(190, 211, 235, 0.65);
+            
+            --status-green: #10b981;
+            --status-yellow: #f59e0b;
+            --status-red: #ff5263;
+
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(79, 163, 255, 0.12), transparent),
+                radial-gradient(circle 600px at 0% 100%, rgba(34, 211, 238, 0.04), transparent);
+            background-attachment: fixed;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Glow & Entrance Animations */
+        @keyframes subtlePulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.08); }
+        }
+
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-up {
+            animation: cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Shell & Layout */
+        .smart-workspace-shell {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        #smart-bi-sidebar {
+            width: 270px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 1000;
+            padding: 1.75rem 1.25rem;
+        }
+
+        .rca-main {
+            margin-left: 270px;
+            flex: 1;
+            width: calc(100% - 270px);
+            min-height: 100vh;
+            padding: 2.5rem 3.5rem;
+            overflow-y: auto;
+        }
+
+        .rca-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 2rem;
+        }
+
+        .header-left {
+            max-width: 750px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--accent-cyan);
+            margin-bottom: 0.65rem;
+            text-transform: uppercase;
+        }
+
+        .eyebrow-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan);
+            animation: subtlePulse 2.5s infinite;
+        }
+
+        .page-header h1 {
+            font-size: 2.15rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+            margin-bottom: 0.4rem;
+        }
+
+        .page-header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* Messages */
+        .messages {
+            margin-bottom: 1.5rem;
+        }
+
+        .message {
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            background: rgba(79, 163, 255, 0.08);
+            border: 1px solid var(--border-subtle);
+            color: #dbeafe;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Panels & Cards */
+        .panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            position: relative;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .panel:hover {
+            border-color: var(--border-focus);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+        }
+
+        .panel-header {
+            padding: 1.75rem 1.75rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .panel-header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .panel-header p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+        }
+
+        /* Control Form */
+        .control-panel {
+            padding: 1.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .control-panel .panel-header {
+            padding: 0 0 1.5rem;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            align-items: flex-end;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .field select {
+            width: 100%;
+            height: 44px;
+            padding: 0 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-subtle);
+            background-color: var(--bg-surface);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234fa3ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            transition: all 0.2s ease;
+        }
+
+        .field select:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(79, 163, 255, 0.15);
+        }
+
+        .control-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .run-button {
+            height: 44px;
+            padding: 0 24px;
+            border: none;
+            border-radius: var(--radius-md);
+            background: var(--accent-gradient);
+            color: #040911;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(34, 211, 238, 0.25);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .run-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(79, 163, 255, 0.35);
+        }
+
+        /* DARK THEME KPI CARDS */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background-color: var(--bg-kpi-card);
+            border: 1px solid var(--border-kpi);
+            border-radius: var(--radius-md);
+            padding: 1.4rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(79, 163, 255, 0.3);
+        }
+
+        .kpi-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .kpi-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-top: 0.6rem;
+            letter-spacing: -0.02em;
+        }
+
+        .kpi-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.45rem;
+        }
+
+        .kpi-value.positive { color: var(--status-green); }
+        .kpi-value.negative { color: var(--status-red); }
+        .kpi-value.neutral { color: var(--status-yellow); }
+
+        /* PRIMARY CAUSE SECTION (DARK THEMED) */
+        .primary-cause {
+            display: grid;
+            grid-template-columns: 1.35fr 0.65fr;
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .cause-highlight,
+        .cause-percentage {
+            background-color: var(--bg-kpi-card);
+            border: 1px solid var(--border-kpi);
+            border-radius: var(--radius-md);
+            padding: 1.75rem;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .cause-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .cause-name {
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            margin-top: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .cause-description {
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            line-height: 1.6;
+            margin-top: 0.5rem;
+        }
+
+        .cause-percentage {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .cause-percentage-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.75rem;
+            font-weight: 800;
+            color: var(--accent-blue);
+        }
+
+        .cause-percentage-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-top: 0.25rem;
+        }
+
+        /* Chart & Summary Split */
+        .content-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-panel, .summary-panel {
+            padding: 1.75rem;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 340px;
+            width: 100%;
+            margin-top: 1.5rem;
+        }
+
+        .summary-box {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            border-radius: var(--radius-md);
+            background: rgba(7, 17, 31, 0.75);
+            border: 1px solid var(--border-subtle);
+            color: #dbeafe;
+            font-size: 0.95rem;
+            line-height: 1.65;
+        }
+
+        /* Table */
+        .table-panel {
+            padding: 1.75rem;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .table-wrapper {
+            margin-top: 1.25rem;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        th {
+            padding: 1rem 1.25rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-muted);
+        }
+
+        tr:hover td {
+            background: rgba(79, 163, 255, 0.03);
+        }
+
+        .direction-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        .badge-increase {
+            color: #34d399;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .badge-decrease {
+            color: #ff9aa7;
+            background: rgba(255, 82, 99, 0.12);
+            border: 1px solid rgba(255, 82, 99, 0.25);
+        }
+
+        .badge-neutral {
+            color: #fde047;
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 4rem 2rem;
+            text-align: center;
+            border: 1px dashed var(--border-subtle);
+            border-radius: var(--radius-lg);
+            background: rgba(7, 17, 31, 0.45);
+        }
+
+        .empty-icon {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(79, 163, 255, 0.08);
+            border: 1px solid var(--border-subtle);
+            color: var(--accent-cyan);
+            font-size: 1.5rem;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+        }
+
+        .empty-state p {
+            max-width: 540px;
+            margin: 0 auto;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 992px) {
+            #smart-bi-sidebar { position: relative; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-subtle); }
+            .rca-main { margin-left: 0; width: 100%; padding: 1.5rem; }
+            .content-grid, .primary-cause { grid-template-columns: 1fr; }
+            .page-header { flex-direction: column; }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside id="smart-bi-sidebar">
+    {% include "includes/smart_sidebar.html" %}
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="rca-main">
+    <div class="rca-container">
+
+        <!-- HEADER -->
+        <header class="page-header fade-up">
+            <div class="header-left">
+                <div class="eyebrow">
+                    <span class="eyebrow-dot"></span>
+                    Advanced Insights
+                </div>
+                <h1>Root Cause Analysis</h1>
+                <p>Identify the factors that contributed most to a change in your business metrics and understand what is driving your performance trajectory.</p>
+            </div>
+        </header>
+
+        <!-- MESSAGES -->
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- CONTROL PANEL -->
+        <section class="panel control-panel fade-up">
+            <div class="panel-header">
+                <div>
+                    <h2>Analysis Configuration</h2>
+                    <p>Select the dataset, metric, and business dimension you want to decompose.</p>
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="dataset" value="{{ selected_dataset.id }}">
+                <input type="hidden" name="version" value="{{ selected_version.id }}">
+
+                <div class="control-grid">
+                    <!-- DATASET -->
+                    <div class="field">
+                        <label>Dataset</label>
+                        <select onchange="changeDataset(this.value)">
+                            {% for dataset in datasets %}
+                                <option value="{{ dataset.id }}" {% if dataset.id == selected_dataset.id %}selected{% endif %}>
+                                    {{ dataset.name }} — {{ dataset.dataset_type }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- VERSION -->
+                    <div class="field">
+                        <label>Data Version</label>
+                        <select onchange="changeVersion(this.value)">
+                            {% for version in versions %}
+                                <option value="{{ version.id }}" {% if version.id == selected_version.id %}selected{% endif %}>
+                                    Version {{ version.version_number }} — {{ version.version_type }}
+                                    {% if version.is_current %}(Current){% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- METRICS -->
+                    <div class="field">
+                        <label>Metrics</label>
+                        <select name="metric_column" required>
+                            <option value="">Select metric</option>
+                            {% for column in numeric_columns %}
+                                <option value="{{ column }}" {% if column == selected_metric_column %}selected{% endif %}>
+                                    {{ column }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- DIMENSION -->
+                    <div class="field">
+                        <label>Dimension</label>
+                        <select name="dimension_column" required>
+                            <option value="">Select dimension</option>
+                            {% for column in dimension_columns %}
+                                <option value="{{ column }}" {% if column == selected_dimension_column %}selected{% endif %}>
+                                    {{ column }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- DATE COLUMN -->
+                    <div class="field">
+                        <label>Date Column</label>
+                        <select name="date_column" onchange="changeDateColumn(this.value)">
+                            <option value="">No date / use all data</option>
+                            {% for column in date_columns %}
+                                <option value="{{ column }}" {% if column == selected_date_column %}selected{% endif %}>
+                                    {{ column }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- TARGET PERIOD -->
+                    <div class="field">
+                        <label>Target Period</label>
+                        <select name="target_period" required>
+                            <option value="">Select target period</option>
+                            {% for period in available_periods %}
+                                <option value="{{ period.value }}" {% if period.value == selected_target_period %}selected{% endif %}>
+                                    {{ period.label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- COMPARISON PERIOD -->
+                    <div class="field">
+                        <label>Comparison Period</label>
+                        <select name="comparison_period" required>
+                            <option value="">Select comparison period</option>
+                            {% for period in available_periods %}
+                                <option value="{{ period.value }}" {% if period.value == selected_comparison_period %}selected{% endif %}>
+                                    {{ period.label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="control-actions">
+                    <button type="submit" class="run-button">Analyze Root Cause</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- RESULTS -->
+        {% if root_cause_result %}
+
+            <!-- DARK THEME KPI CARDS -->
+            <section class="kpi-grid fade-up">
+                <div class="kpi-card">
+                    <div class="kpi-label">Target Value</div>
+                    <div class="kpi-value">{{ root_cause_result.total_value|floatformat:2 }}</div>
+                    <div class="kpi-sub">{{ root_cause_result.target_period }}</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">Comparison Value</div>
+                    <div class="kpi-value">{{ root_cause_result.comparison_value|floatformat:2 }}</div>
+                    <div class="kpi-sub">{{ root_cause_result.comparison_period }}</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">Change</div>
+                    <div class="kpi-value {% if root_cause_result.change_value < 0 %}negative{% elif root_cause_result.change_value > 0 %}positive{% else %}neutral{% endif %}">
+                        {{ root_cause_result.change_value|floatformat:2 }}
+                    </div>
+                    <div class="kpi-sub">
+                        {% if root_cause_result.change_percentage != None %}
+                            {{ root_cause_result.change_percentage|floatformat:2 }}%
+                        {% else %}
+                            Percentage unavailable
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">Causes Found</div>
+                    <div class="kpi-value">{{ root_cause_result.cause_count }}</div>
+                    <div class="kpi-sub">{{ root_cause_result.dimension_column }}</div>
+                </div>
+            </section>
+
+            <!-- PRIMARY CAUSE HIGHLIGHT -->
+            <section class="primary-cause fade-up">
+                <div class="cause-highlight">
+                    <div class="cause-label">Primary Contributing Factor</div>
+                    <div class="cause-name">{{ root_cause_result.primary_cause|default:"No clear cause" }}</div>
+                    <div class="cause-description">The specific dimension value that contributed most significantly to the observed delta.</div>
+                </div>
+
+                <div class="cause-percentage">
+                    <div>
+                        <div class="cause-percentage-value">
+                            {% if root_cause_result.primary_cause_contribution != None %}
+                                {{ root_cause_result.primary_cause_contribution|floatformat:1 }}%
+                            {% else %} — {% endif %}
+                        </div>
+                        <div class="cause-percentage-label">Contribution to Change</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CHART & SUMMARY -->
+            <section class="content-grid fade-up">
+                <div class="panel chart-panel">
+                    <div class="panel-header" style="padding:0;">
+                        <div>
+                            <h2>Contribution Analysis</h2>
+                            <p>Breakdown of contribution percentages by dimension element.</p>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="causeChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="panel summary-panel">
+                    <div class="panel-header" style="padding:0;">
+                        <div>
+                            <h2>Analysis Summary</h2>
+                            <p>Automated statistical interpretation.</p>
+                        </div>
+                    </div>
+                    <div class="summary-box">
+                        {{ root_cause_result.summary }}
+                    </div>
+                </div>
+            </section>
+
+            <!-- CAUSE TABLE -->
+            <section class="panel table-panel fade-up">
+                <div class="panel-header" style="padding:0;">
+                    <div>
+                        <h2>Contributing Factors</h2>
+                        <p>Detailed performance breakdown across all tracked segments.</p>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Dimension</th>
+                                <th>Target</th>
+                                <th>Comparison</th>
+                                <th>Change</th>
+                                <th>Change %</th>
+                                <th>Contribution</th>
+                                <th>Direction</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cause in root_cause_result.cause_data %}
+                                <tr>
+                                    <td><strong style="color:#ffffff;">{{ cause.dimension }}</strong></td>
+                                    <td>{{ cause.target_value|floatformat:2 }}</td>
+                                    <td>{{ cause.comparison_value|floatformat:2 }}</td>
+                                    <td class="{% if cause.change_value < 0 %}negative{% elif cause.change_value > 0 %}positive{% else %}neutral{% endif %}">
+                                        {{ cause.change_value|floatformat:2 }}
+                                    </td>
+                                    <td>
+                                        {% if cause.change_percentage != None %}
+                                            {{ cause.change_percentage|floatformat:2 }}%
+                                        {% else %} — {% endif %}
+                                    </td>
+                                    <td style="font-family:'JetBrains Mono', monospace; font-weight:700; color:#ffffff;">
+                                        {{ cause.contribution_percentage|floatformat:2 }}%
+                                    </td>
+                                    <td>
+                                        {% if cause.direction == "Increase" %}
+                                            <span class="direction-badge badge-increase">Increase</span>
+                                        {% elif cause.direction == "Decrease" %}
+                                            <span class="direction-badge badge-decrease">Decrease</span>
+                                        {% else %}
+                                            <span class="direction-badge badge-neutral">No Change</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="7" style="text-align:center; padding: 2rem;">No contributing factors found.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        {% else %}
+            <!-- INITIAL EMPTY STATE -->
+            <section class="empty-state fade-up">
+                <div class="empty-icon">◎</div>
+                <h3>Ready to Find the Root Cause</h3>
+                <p>Select your operational metric, category dimension, and periods above to discover key factors driving performance shifts.</p>
+            </section>
+        {% endif %}
+
+    </div>
+</main>
+
+{% if root_cause_result %}
+    {{ root_cause_result.chart_data|json_script:"root-cause-chart-data" }}
+{% endif %}
+
+<script>
+    function changeDataset(datasetId) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("dataset", datasetId);
+        url.searchParams.delete("version");
+        window.location.href = url.toString();
+    }
+
+    function changeVersion(versionId) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("version", versionId);
+        window.location.href = url.toString();
+    }
+
+    function changeDateColumn(dateColumn) {
+        const url = new URL(window.location.href);
+        if (dateColumn) {
+            url.searchParams.set("date_column", dateColumn);
+        } else {
+            url.searchParams.delete("date_column");
+        }
+        url.searchParams.delete("target_period");
+        url.searchParams.delete("comparison_period");
+        window.location.href = url.toString();
+    }
+
+    {% if root_cause_result %}
+    document.addEventListener("DOMContentLoaded", function () {
+        const chartElement = document.getElementById("root-cause-chart-data");
+        const canvas = document.getElementById("causeChart");
+
+        if (chartElement && canvas && typeof Chart !== "undefined") {
+            const chartData = JSON.parse(chartElement.textContent);
+            const labels = chartData.map(item => item.label);
+            const values = chartData.map(item => item.contribution);
+            const ctx = canvas.getContext("2d");
+
+            new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Contribution %",
+                        data: values,
+                        backgroundColor: "rgba(79, 163, 255, 0.45)",
+                        borderColor: "#4fa3ff",
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        hoverBackgroundColor: "rgba(34, 211, 238, 0.65)"
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: "rgba(4, 11, 21, 0.96)",
+                            borderColor: "rgba(255, 255, 255, 0.12)",
+                            borderWidth: 1,
+                            titleColor: "#f8fafc",
+                            bodyColor: "#cfe4ff",
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    return " Contribution: " + Number(context.raw).toFixed(2) + "%";
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: "rgba(218, 231, 245, 0.58)",
+                                font: { size: 10 }
+                            },
+                            grid: {
+                                color: "rgba(255, 255, 255, 0.035)",
+                                drawBorder: false
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: "rgba(218, 231, 245, 0.58)",
+                                callback: function(value) {
+                                    return value + "%";
+                                },
+                                font: { size: 10 }
+                            },
+                            grid: {
+                                color: "rgba(255, 255, 255, 0.045)",
+                                drawBorder: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+    {% endif %}
+</script>
+
+</body>
+</html>

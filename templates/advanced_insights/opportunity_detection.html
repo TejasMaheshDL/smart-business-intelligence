@@ -1,0 +1,1366 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opportunity Detection | Smart Business Intelligence</title>
+
+    <!-- Google Fonts & Chart.js -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-base: #040911;
+            --bg-surface: #07111f;
+            --bg-card: rgba(11, 23, 42, 0.72);
+            --bg-card-hover: rgba(16, 32, 59, 0.85);
+
+            /* Deep Dark KPI Surfaces */
+            --bg-kpi-card: #050d18;
+            --border-kpi: rgba(255, 255, 255, 0.06);
+
+            --border-subtle: rgba(79, 163, 255, 0.14);
+            --border-focus: rgba(79, 163, 255, 0.45);
+            
+            --accent-blue: #4fa3ff;
+            --accent-cyan: #22d3ee;
+            --accent-purple: #8b5cf6;
+            --accent-gradient: linear-gradient(135deg, #4fa3ff 0%, #22d3ee 100%);
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: rgba(190, 211, 235, 0.65);
+            
+            --status-green: #10b981;
+            --status-yellow: #f59e0b;
+            --status-red: #ff5263;
+
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(79, 163, 255, 0.12), transparent),
+                radial-gradient(circle 600px at 0% 100%, rgba(34, 211, 238, 0.04), transparent);
+            background-attachment: fixed;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Glow & Entrance Animations */
+        @keyframes subtlePulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.08); }
+        }
+
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-up {
+            animation: cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Layout Structure */
+        .opportunity-layout {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .opportunity-sidebar {
+            width: 270px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 1000;
+            padding: 1.75rem 1.25rem;
+        }
+
+        .opportunity-main {
+            margin-left: 270px;
+            flex: 1;
+            width: calc(100% - 270px);
+            min-height: 100vh;
+            padding: 2.5rem 3.5rem;
+            overflow-y: auto;
+        }
+
+        .opportunity-page {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 2rem;
+            gap: 24px;
+        }
+
+        .header-left {
+            max-width: 750px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--accent-cyan);
+            margin-bottom: 0.65rem;
+            text-transform: uppercase;
+        }
+
+        .eyebrow-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan);
+            animation: subtlePulse 2.5s infinite;
+        }
+
+        .page-title {
+            font-size: 2.15rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+            margin-bottom: 0.4rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: rgba(79, 163, 255, 0.08);
+            border: 1px solid var(--border-subtle);
+            color: var(--accent-blue);
+            font-size: 0.8rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+        }
+
+        /* Panels & Cards */
+        .panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            position: relative;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            padding: 1.75rem;
+            margin-bottom: 2rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .panel:hover {
+            border-color: var(--border-focus);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+
+        .panel-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .panel-description {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+        }
+
+        .panel-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.65rem;
+            border-radius: 6px;
+            background: rgba(34, 211, 238, 0.1);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(34, 211, 238, 0.25);
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            position: relative;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            padding: 1.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-heading {
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .section-description {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            align-items: flex-start;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .field select {
+            width: 100%;
+            height: 44px;
+            padding: 0 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-subtle);
+            background-color: var(--bg-surface);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234fa3ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            transition: all 0.2s ease;
+        }
+
+        .field select:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(79, 163, 255, 0.15);
+        }
+
+        .field select option {
+            background: #07111f;
+            color: #f8fafc;
+        }
+
+        .field-help {
+            margin-top: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            line-height: 1.4;
+        }
+
+        .control-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            gap: 15px;
+        }
+
+        .selection-status {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .selection-status-dot {
+            width: 7px;
+            height: 7px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: var(--status-green);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+        }
+
+        .run-button {
+            height: 44px;
+            padding: 0 24px;
+            border: none;
+            border-radius: var(--radius-md);
+            background: var(--accent-gradient);
+            color: #040911;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 18px rgba(34, 211, 238, 0.25);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+        }
+
+        .run-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(79, 163, 255, 0.35);
+        }
+
+        .run-button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .run-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* DARK THEME KPI CARDS */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background-color: var(--bg-kpi-card);
+            border: 1px solid var(--border-kpi);
+            border-radius: var(--radius-md);
+            padding: 1.4rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(79, 163, 255, 0.3);
+        }
+
+        .kpi-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .kpi-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .kpi-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: rgba(79, 163, 255, 0.08);
+            color: var(--accent-blue);
+            font-size: 14px;
+        }
+
+        .kpi-high .kpi-icon { color: var(--status-red); background: rgba(255, 82, 99, 0.08); }
+        .kpi-medium .kpi-icon { color: var(--status-yellow); background: rgba(245, 158, 11, 0.08); }
+
+        .kpi-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-top: 0.8rem;
+            letter-spacing: -0.02em;
+        }
+
+        .kpi-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.45rem;
+        }
+
+        /* Content Charts Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.45fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-wrap {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .chart-wrap.large {
+            height: 340px;
+        }
+
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background-color: var(--bg-kpi-card);
+            border: 1px solid var(--border-kpi);
+            border-radius: var(--radius-md);
+            padding: 1.4rem;
+        }
+
+        .summary-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .summary-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-top: 0.6rem;
+            overflow-wrap: anywhere;
+        }
+
+        .summary-value.score {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-cyan);
+            font-weight: 800;
+        }
+
+        .summary-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin-top: 0.5rem;
+        }
+
+        .summary-box {
+            padding: 1.25rem;
+            border-radius: var(--radius-md);
+            background: rgba(7, 17, 31, 0.75);
+            border: 1px solid var(--border-subtle);
+            color: #dbeafe;
+            font-size: 0.95rem;
+            line-height: 1.65;
+        }
+
+        /* Table */
+        .table-panel {
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .opportunity-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        .opportunity-table th {
+            padding: 1rem 1.25rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            white-space: nowrap;
+        }
+
+        .opportunity-table td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .opportunity-table tbody tr:hover {
+            background: rgba(79, 163, 255, 0.03);
+        }
+
+        .dimension-name {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .score-cell {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-blue);
+            font-weight: 700;
+        }
+
+        .growth-positive {
+            color: var(--status-green);
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .growth-neutral {
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .level-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        .level-high {
+            background: rgba(255, 82, 99, 0.12);
+            color: var(--status-red);
+            border: 1px solid rgba(255, 82, 99, 0.25);
+        }
+
+        .level-medium {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--status-yellow);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+
+        .level-low {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--status-green);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .score-bar {
+            width: 90px;
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            border-radius: inherit;
+            background: var(--accent-gradient);
+        }
+
+        /* Methodology */
+        .methodology {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .method-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+        }
+
+        .method-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .method-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: var(--radius-md);
+            background: rgba(7, 17, 31, 0.55);
+        }
+
+        .method-number {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            background: rgba(79, 163, 255, 0.12);
+            color: var(--accent-cyan);
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+        }
+
+        .method-item strong {
+            display: block;
+            margin-bottom: 2px;
+            color: #ffffff;
+            font-size: 0.85rem;
+        }
+
+        .method-item span {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            line-height: 1.45;
+        }
+
+        .formula-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            background-color: var(--bg-kpi-card);
+            border: 1px solid var(--border-kpi);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+        }
+
+        .formula-label {
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .formula {
+            margin: 15px 0;
+            color: var(--accent-cyan);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.05rem;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        .formula-note {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        /* Empty States */
+        .empty-state {
+            padding: 4rem 2rem;
+            text-align: center;
+            border: 1px dashed var(--border-subtle);
+            border-radius: var(--radius-lg);
+            background: rgba(7, 17, 31, 0.45);
+            margin-bottom: 2rem;
+        }
+
+        .empty-icon {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(79, 163, 255, 0.08);
+            border: 1px solid var(--border-subtle);
+            color: var(--accent-cyan);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+        }
+
+        .empty-state p {
+            max-width: 540px;
+            margin: 0 auto;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid { grid-template-columns: 1fr; }
+            .methodology { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 992px) {
+            .opportunity-sidebar { position: relative; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-subtle); }
+            .opportunity-main { margin-left: 0; width: 100%; padding: 1.5rem; }
+            .page-header { flex-direction: column; }
+            .control-actions { flex-direction: column; align-items: stretch; }
+            .run-button { width: 100%; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="opportunity-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="opportunity-sidebar">
+        {% include "includes/smart_sidebar.html" %}
+    </aside>
+
+    <!-- MAIN -->
+    <main class="opportunity-main">
+        <div class="opportunity-page">
+
+            <!-- HEADER -->
+            <header class="page-header fade-up">
+                <div class="header-left">
+                    <div class="eyebrow">
+                        <span class="eyebrow-dot"></span>
+                        Advanced Insights
+                    </div>
+                    <h1 class="page-title">Opportunity Detection</h1>
+                    <p class="page-subtitle">Identify business segments showing meaningful value scale and positive momentum across your analytics datasets.</p>
+                </div>
+                <div class="header-badge">
+                    <span>✦</span> Opportunity Intelligence
+                </div>
+            </header>
+
+            <!-- CONTROLS -->
+            <form method="post" class="control-panel fade-up" id="opportunityForm">
+                {% csrf_token %}
+
+                <div class="section-heading">
+                    <div>
+                        <h2 class="section-title">Analysis Configuration</h2>
+                        <p class="section-description">Select the dataset version and fields used to identify growth opportunities.</p>
+                    </div>
+                </div>
+
+                <div class="control-grid">
+                    <!-- DATASET -->
+                    <div class="field">
+                        <label for="datasetSelector">Dataset</label>
+                        <select id="datasetSelector" name="dataset">
+                            {% for dataset in datasets %}
+                                <option value="{{ dataset.id }}" {% if selected_dataset.id == dataset.id %}selected{% endif %}>
+                                    {{ dataset.name }} — {{ dataset.dataset_type }}
+                                </option>
+                            {% empty %}
+                                <option value="">No datasets available</option>
+                            {% endfor %}
+                        </select>
+                        <div class="field-help">Select the dataset to analyze.</div>
+                    </div>
+
+                    <!-- VERSION -->
+                    <div class="field">
+                        <label for="versionSelector">Data Version</label>
+                        <select id="versionSelector" name="version">
+                            {% for version in versions %}
+                                <option value="{{ version.id }}" {% if selected_version.id == version.id %}selected{% endif %}>
+                                    Version {{ version.version_number }} — {{ version.version_type }}
+                                    {% if version.is_current %}— Current{% endif %}
+                                </option>
+                            {% empty %}
+                                <option value="">No versions available</option>
+                            {% endfor %}
+                        </select>
+                        <div class="field-help">Uses cleaned and preprocessed versions.</div>
+                    </div>
+
+                    <!-- DIMENSION -->
+                    <div class="field">
+                        <label for="dimensionColumn">Opportunity Dimension</label>
+                        <select id="dimensionColumn" name="dimension_column" required>
+                            <option value="">Select dimension</option>
+                            {% for column in dimension_columns %}
+                                <option value="{{ column }}" {% if selected_dimension_column == column %}selected{% endif %}>
+                                    {{ column }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="field-help">E.g., Product, Category, Region or Segment.</div>
+                    </div>
+
+                    <!-- VALUE METRIC -->
+                    <div class="field">
+                        <label for="valueColumn">Value Metric</label>
+                        <select id="valueColumn" name="value_column" required>
+                            <option value="">Select value metric</option>
+                            {% for column in value_columns %}
+                                <option value="{{ column }}" {% if selected_value_column == column %}selected{% endif %}>
+                                    {{ column }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="field-help">Numeric metric like Sales, Revenue or Volume.</div>
+                    </div>
+
+                    <!-- ACTIVITY DATE -->
+                    <div class="field">
+                        <label for="dateColumn">Activity Date</label>
+                        <select id="dateColumn" name="date_column">
+                            <option value="">No date comparison</option>
+                            {% for column in date_columns %}
+                                <option value="{{ column }}" {% if selected_date_column == column %}selected{% endif %}>
+                                    {{ column }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="field-help">Optional. Enables positive growth comparison.</div>
+                    </div>
+                </div>
+
+                <!-- ACTIONS -->
+                <div class="control-actions">
+                    <div class="selection-status">
+                        <span class="selection-status-dot"></span>
+                        <span id="selectionStatus">Ready to analyze the selected dataset.</span>
+                    </div>
+
+                    <button type="submit" class="run-button" id="runButton">
+                        <svg class="run-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 3v18"></path>
+                            <path d="M5 10l7-7 7 7"></path>
+                        </svg>
+                        Run Opportunity Detection
+                    </button>
+                </div>
+            </form>
+
+            <!-- NO DATA STATES -->
+            {% if not datasets %}
+                <div class="empty-state fade-up">
+                    <div class="empty-icon">✦</div>
+                    <h3>No Dataset Available</h3>
+                    <p>Upload a dataset through Data Management before running Opportunity Detection.</p>
+                </div>
+            {% elif not selected_version %}
+                <div class="empty-state fade-up">
+                    <div class="empty-icon">◌</div>
+                    <h3>No Data Version Available</h3>
+                    <p>The selected dataset does not contain a usable data version.</p>
+                </div>
+            {% elif not dimension_columns or not value_columns %}
+                <div class="empty-state fade-up">
+                    <div class="empty-icon">!</div>
+                    <h3>Required Analysis Columns Not Found</h3>
+                    <p>Opportunity Detection requires at least one dimension column and one numeric metric in the selected version.</p>
+                </div>
+            {% endif %}
+
+            <!-- RESULT AREA -->
+            {% if opportunity_result %}
+
+                <!-- DARK THEME KPI CARDS -->
+                <section class="kpi-grid fade-up">
+                    <article class="kpi-card">
+                        <div class="kpi-top">
+                            <span class="kpi-label">Total Opportunities</span>
+                            <span class="kpi-icon">✦</span>
+                        </div>
+                        <div class="kpi-value">{{ opportunity_result.total_opportunities|default:0 }}</div>
+                        <div class="kpi-subtitle">Identified business areas</div>
+                    </article>
+
+                    <article class="kpi-card kpi-high">
+                        <div class="kpi-top">
+                            <span class="kpi-label">High Opportunities</span>
+                            <span class="kpi-icon">↑</span>
+                        </div>
+                        <div class="kpi-value" style="color: var(--status-red);">{{ opportunity_result.high_opportunities|default:0 }}</div>
+                        <div class="kpi-subtitle">Priority focus segment</div>
+                    </article>
+
+                    <article class="kpi-card kpi-medium">
+                        <div class="kpi-top">
+                            <span class="kpi-label">Medium Opportunities</span>
+                            <span class="kpi-icon">◆</span>
+                        </div>
+                        <div class="kpi-value" style="color: var(--status-yellow);">{{ opportunity_result.medium_opportunities|default:0 }}</div>
+                        <div class="kpi-subtitle">Moderate opportunity areas</div>
+                    </article>
+
+                    <article class="kpi-card">
+                        <div class="kpi-top">
+                            <span class="kpi-label">Average Opportunity Score</span>
+                            <span class="kpi-icon">◎</span>
+                        </div>
+                        <div class="kpi-value">{{ opportunity_result.average_opportunity_score|default:0|floatformat:1 }}</div>
+                        <div class="kpi-subtitle">Normalized scale: 0–100</div>
+                    </article>
+                </section>
+
+                <!-- CHARTS -->
+                <section class="content-grid fade-up">
+                    <article class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <h2 class="panel-title">Opportunity Distribution</h2>
+                                <p class="panel-description">Proportion of opportunities across priority levels</p>
+                            </div>
+                            <span class="panel-badge">LEVEL</span>
+                        </div>
+                        <div class="chart-wrap">
+                            <canvas id="opportunityDistributionChart"></canvas>
+                        </div>
+                    </article>
+
+                    <article class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <h2 class="panel-title">Top Opportunities</h2>
+                                <p class="panel-description">Highest-scoring areas based on weighted criteria</p>
+                            </div>
+                            <span class="panel-badge">SCORE</span>
+                        </div>
+                        <div class="chart-wrap large">
+                            <canvas id="topOpportunityChart"></canvas>
+                        </div>
+                    </article>
+                </section>
+
+                <!-- VALUE COMPARISON -->
+                <section class="panel fade-up">
+                    <div class="panel-header">
+                        <div>
+                            <h2 class="panel-title">Current Value Comparison</h2>
+                            <p class="panel-description">Business metric contribution across ranked areas</p>
+                        </div>
+                        <span class="panel-badge">VALUE</span>
+                    </div>
+                    <div class="chart-wrap large">
+                        <canvas id="valueComparisonChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- SUMMARY -->
+                <section class="summary-grid fade-up">
+                    <article class="summary-card">
+                        <div class="summary-label">Highest Opportunity</div>
+                        <div class="summary-value">{{ opportunity_result.highest_opportunity|default:"—" }}</div>
+                        <div class="summary-text">Leading candidate area identified from your dataset.</div>
+                    </article>
+
+                    <article class="summary-card">
+                        <div class="summary-label">Opportunity Score</div>
+                        <div class="summary-value score">{{ opportunity_result.highest_opportunity_score|default:0|floatformat:1 }}</div>
+                        <div class="summary-text">Composite score evaluated from scale and performance velocity.</div>
+                    </article>
+
+                    <article class="summary-card">
+                        <div class="summary-label">Opportunity Percentage</div>
+                        <div class="summary-value score">{{ opportunity_result.opportunity_percentage|default:0|floatformat:1 }}%</div>
+                        <div class="summary-text">Proportion of scanned items categorised as high potential.</div>
+                    </article>
+                </section>
+
+                <!-- INSIGHT SUMMARY -->
+                <section class="panel fade-up">
+                    <div class="panel-header">
+                        <div>
+                            <h2 class="panel-title">Opportunity Summary</h2>
+                            <p class="panel-description">Automated interpretation of the current analysis</p>
+                        </div>
+                    </div>
+                    <div class="summary-box">
+                        {{ opportunity_result.summary|default:"No automated summary is available for this analysis." }}
+                    </div>
+                </section>
+
+                <!-- OPPORTUNITY TABLE -->
+                <section class="panel table-panel fade-up">
+                    <div class="panel-header">
+                        <div>
+                            <h2 class="panel-title">Opportunity Details</h2>
+                            <p class="panel-description">Ranked breakdown of discovered areas</p>
+                        </div>
+                        <span class="panel-badge">TOP AREAS</span>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table class="opportunity-table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>{{ opportunity_result.dimension_column|default:"Dimension" }}</th>
+                                    <th>Opportunity Score</th>
+                                    <th>Level</th>
+                                    <th>Current Value</th>
+                                    <th>Previous Value</th>
+                                    <th>Growth</th>
+                                    <th>Value Share</th>
+                                    <th>Records</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in opportunity_result.opportunity_details %}
+                                    <tr>
+                                        <td>#{{ item.opportunity_rank }}</td>
+                                        <td><span class="dimension-name">{{ item.dimension }}</span></td>
+                                        <td>
+                                            <div style="display:flex; align-items:center; gap:10px;">
+                                                <span class="score-cell">{{ item.opportunity_score|floatformat:1 }}</span>
+                                                <div class="score-bar">
+                                                    <div class="score-fill" style="width: {{ item.opportunity_score|default:0 }}%;"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if item.opportunity_level == "High" %}
+                                                <span class="level-badge level-high">High</span>
+                                            {% elif item.opportunity_level == "Medium" %}
+                                                <span class="level-badge level-medium">Medium</span>
+                                            {% else %}
+                                                <span class="level-badge level-low">Low</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ item.current_value|floatformat:2 }}</td>
+                                        <td>{{ item.previous_value|floatformat:2 }}</td>
+                                        <td>
+                                            {% if item.growth_percentage > 0 %}
+                                                <span class="growth-positive">+{{ item.growth_percentage|floatformat:1 }}%</span>
+                                            {% else %}
+                                                <span class="growth-neutral">{{ item.growth_percentage|floatformat:1 }}%</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ item.value_share_percentage|floatformat:1 }}%</td>
+                                        <td>{{ item.record_count }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="9" style="text-align: center; padding: 2rem;">No opportunity details available.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- METHODOLOGY -->
+                <section class="methodology fade-up">
+                    <article class="method-card">
+                        <div class="panel-header" style="margin-bottom: 0;">
+                            <div>
+                                <h2 class="panel-title">Opportunity Detection Method</h2>
+                                <p class="panel-description">Scoring framework components</p>
+                            </div>
+                        </div>
+
+                        <div class="method-list">
+                            <div class="method-item">
+                                <div class="method-number">01</div>
+                                <div>
+                                    <strong>Current Business Value — 60%</strong>
+                                    <span>Relative current volume/revenue generated by the entity.</span>
+                                </div>
+                            </div>
+                            <div class="method-item">
+                                <div class="method-number">02</div>
+                                <div>
+                                    <strong>Positive Growth — 40%</strong>
+                                    <span>Upward trajectory between historical analysis windows.</span>
+                                </div>
+                            </div>
+                            <div class="method-item">
+                                <div class="method-number">03</div>
+                                <div>
+                                    <strong>Classification Logic</strong>
+                                    <span>High, Medium, and Low tiers calibrated using relative percentiles.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="formula-card">
+                        <div class="formula-label">Score Formula</div>
+                        <div class="formula">Score = 60% Value + 40% Growth</div>
+                        <div class="formula-note">Normalized on a 0–100 scale. If no date comparison is provided, scoring defaults to current relative scale.</div>
+                    </article>
+                </section>
+
+            {% else %}
+                {% if datasets and selected_version %}
+                    <div class="empty-state fade-up">
+                        <div class="empty-icon">✦</div>
+                        <h3>Ready for Opportunity Detection</h3>
+                        <p>Select your operational dimension and numeric metric above, then run the algorithm to surface potential expansion areas.</p>
+                    </div>
+                {% endif %}
+            {% endif %}
+
+        </div>
+    </main>
+</div>
+
+<script>
+    const datasetSelector = document.getElementById("datasetSelector");
+    const versionSelector = document.getElementById("versionSelector");
+    const dimensionColumn = document.getElementById("dimensionColumn");
+    const valueColumn = document.getElementById("valueColumn");
+    const dateColumn = document.getElementById("dateColumn");
+    const runButton = document.getElementById("runButton");
+    const opportunityForm = document.getElementById("opportunityForm");
+    const selectionStatus = document.getElementById("selectionStatus");
+
+    function navigateWithSelection() {
+        if (!datasetSelector) return;
+        const params = new URLSearchParams();
+        if (datasetSelector.value) params.set("dataset", datasetSelector.value);
+        if (versionSelector && versionSelector.value) params.set("version", versionSelector.value);
+        window.location.href = window.location.pathname + "?" + params.toString();
+    }
+
+    if (datasetSelector) datasetSelector.addEventListener("change", navigateWithSelection);
+    if (versionSelector) {
+        versionSelector.addEventListener("change", function () {
+            const params = new URLSearchParams();
+            if (datasetSelector.value) params.set("dataset", datasetSelector.value);
+            if (versionSelector.value) params.set("version", versionSelector.value);
+            window.location.href = window.location.pathname + "?" + params.toString();
+        });
+    }
+
+    function updateSelectionStatus() {
+        if (!selectionStatus) return;
+        const dimension = dimensionColumn ? dimensionColumn.value : "";
+        const value = valueColumn ? valueColumn.value : "";
+        if (!dimension || !value) {
+            selectionStatus.textContent = "Select a dimension and value metric to continue.";
+            return;
+        }
+        if (dateColumn && dateColumn.value) {
+            selectionStatus.textContent = "Ready — value and growth analysis enabled.";
+        } else {
+            selectionStatus.textContent = "Ready — value-based opportunity analysis enabled.";
+        }
+    }
+
+    if (dimensionColumn) dimensionColumn.addEventListener("change", updateSelectionStatus);
+    if (valueColumn) valueColumn.addEventListener("change", updateSelectionStatus);
+    if (dateColumn) dateColumn.addEventListener("change", updateSelectionStatus);
+    updateSelectionStatus();
+
+    if (opportunityForm) {
+        opportunityForm.addEventListener("submit", function () {
+            if (runButton) {
+                runButton.disabled = true;
+                runButton.innerHTML = "Analyzing...";
+            }
+        });
+    }
+
+    {% if opportunity_result %}
+    const opportunityChartData = {
+        distribution: {
+            labels: [{% for label in opportunity_result.chart_data.distribution.labels %}"{{ label|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+            values: [{% for value in opportunity_result.chart_data.distribution.values %}{{ value|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}]
+        },
+        topOpportunities: {
+            labels: [{% for label in opportunity_result.chart_data.top_opportunities.labels %}"{{ label|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+            values: [{% for value in opportunity_result.chart_data.top_opportunities.values %}{{ value|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}]
+        },
+        valueComparison: {
+            labels: [{% for label in opportunity_result.chart_data.value_comparison.labels %}"{{ label|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+            values: [{% for value in opportunity_result.chart_data.value_comparison.values %}{{ value|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}]
+        }
+    };
+
+    Chart.defaults.color = "rgba(218, 231, 245, 0.62)";
+    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+
+    const distributionCanvas = document.getElementById("opportunityDistributionChart");
+    if (distributionCanvas && typeof Chart !== "undefined") {
+        new Chart(distributionCanvas, {
+            type: "doughnut",
+            data: {
+                labels: opportunityChartData.distribution.labels,
+                datasets: [{
+                    data: opportunityChartData.distribution.values,
+                    backgroundColor: ["#ff5263", "#f59e0b", "#10b981"],
+                    borderColor: "#07111f",
+                    borderWidth: 3,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "68%",
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: "circle",
+                            padding: 16,
+                            boxWidth: 8,
+                            color: "rgba(218, 231, 245, 0.7)"
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: "rgba(4, 11, 21, 0.96)",
+                        borderColor: "rgba(255, 255, 255, 0.12)",
+                        borderWidth: 1,
+                        padding: 12
+                    }
+                }
+            }
+        });
+    }
+
+    const topOpportunityCanvas = document.getElementById("topOpportunityChart");
+    if (topOpportunityCanvas && typeof Chart !== "undefined") {
+        new Chart(topOpportunityCanvas, {
+            type: "bar",
+            data: {
+                labels: opportunityChartData.topOpportunities.labels,
+                datasets: [{
+                    label: "Opportunity Score",
+                    data: opportunityChartData.topOpportunities.values,
+                    backgroundColor: "rgba(79, 163, 255, 0.75)",
+                    borderColor: "#4fa3ff",
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    barThickness: 16
+                }]
+            },
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: { color: "rgba(255, 255, 255, 0.05)" },
+                        ticks: { color: "rgba(190, 208, 229, 0.5)", font: { size: 10 } }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { color: "rgba(218, 231, 245, 0.75)", font: { size: 10 } }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: "rgba(4, 11, 21, 0.96)",
+                        borderColor: "rgba(255, 255, 255, 0.12)",
+                        borderWidth: 1,
+                        padding: 12
+                    }
+                }
+            }
+        });
+    }
+
+    const valueComparisonCanvas = document.getElementById("valueComparisonChart");
+    if (valueComparisonCanvas && typeof Chart !== "undefined") {
+        new Chart(valueComparisonCanvas, {
+            type: "bar",
+            data: {
+                labels: opportunityChartData.valueComparison.labels,
+                datasets: [{
+                    label: "Current Value",
+                    data: opportunityChartData.valueComparison.values,
+                    backgroundColor: "rgba(34, 211, 238, 0.65)",
+                    borderColor: "#22d3ee",
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    barThickness: 18
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: "rgba(218, 231, 245, 0.75)", font: { size: 10 } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: "rgba(255, 255, 255, 0.05)" },
+                        ticks: { color: "rgba(190, 208, 229, 0.5)", font: { size: 10 } }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: "rgba(4, 11, 21, 0.96)",
+                        borderColor: "rgba(255, 255, 255, 0.12)",
+                        borderWidth: 1,
+                        padding: 12
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+</script>
+
+</body>
+</html>

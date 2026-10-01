@@ -1,0 +1,617 @@
+{% extends "base.html" %}
+
+{% block title %}
+Reporting
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'reporting/css/reporting.css' %}">
+<div class="reporting-page">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="reporting-header">
+
+        <div>
+            <h1>Reporting</h1>
+
+            <p>
+                Generate, manage, and review business reports
+                from your selected dataset.
+            </p>
+        </div>
+
+        <div class="reporting-header-actions">
+
+            <a
+                href="{% url 'reporting:automated_reports' %}"
+                class="reporting-btn reporting-btn-primary"
+            >
+                Generate Report
+            </a>
+
+            <a
+                href="{% url 'reporting:report_history' %}"
+                class="reporting-btn reporting-btn-secondary"
+            >
+                Report History
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         DATASET SELECTION
+    ====================================================== -->
+
+    <section class="reporting-card">
+
+        <div class="reporting-card-header">
+
+            <div>
+                <h2>Report Data Source</h2>
+
+                <p>
+                    Select the dataset and version used for reporting.
+                </p>
+            </div>
+
+        </div>
+
+        <form
+            method="get"
+            action="{% url 'reporting:dashboard' %}"
+            class="reporting-dataset-form"
+        >
+
+            <div class="reporting-form-group">
+
+                <label for="dataset">
+                    Dataset
+                </label>
+
+                <select
+                    id="dataset"
+                    name="dataset"
+                    class="reporting-select"
+                    onchange="this.form.submit()"
+                >
+
+                    <option value="">
+                        Select Dataset
+                    </option>
+
+                    {% for dataset in datasets %}
+
+                        <option
+                            value="{{ dataset.id }}"
+                            {% if selected_dataset and selected_dataset.id == dataset.id %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ dataset.name }}
+                            — {{ dataset.dataset_type }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="reporting-form-group">
+
+                <label for="version">
+                    Dataset Version
+                </label>
+
+                <select
+                    id="version"
+                    name="version"
+                    class="reporting-select"
+                    onchange="this.form.submit()"
+                >
+
+                    <option value="">
+                        Current Version
+                    </option>
+
+                    {% for version in versions %}
+
+                        <option
+                            value="{{ version.id }}"
+                            {% if selected_version and selected_version.id == version.id %}
+                                selected
+                            {% endif %}
+                        >
+                            Version {{ version.version_number }}
+                            — {{ version.version_type }}
+                            {% if version.is_current %}
+                                (Current)
+                            {% endif %}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+        </form>
+
+    </section>
+
+
+    <!-- =====================================================
+         SELECTED DATASET
+    ====================================================== -->
+
+    {% if selected_dataset %}
+
+    <section class="reporting-card">
+
+        <div class="reporting-card-header">
+
+            <div>
+                <h2>
+                    {{ selected_dataset.name }}
+                </h2>
+
+                <p>
+                    Selected reporting data source
+                </p>
+            </div>
+
+            <span class="reporting-badge">
+                {{ selected_dataset.dataset_type }}
+            </span>
+
+        </div>
+
+
+        <div class="reporting-info-grid">
+
+            <div class="reporting-info-item">
+
+                <span class="reporting-info-label">
+                    Dataset
+                </span>
+
+                <strong>
+                    {{ selected_dataset.name }}
+                </strong>
+
+            </div>
+
+
+            <div class="reporting-info-item">
+
+                <span class="reporting-info-label">
+                    Version
+                </span>
+
+                <strong>
+
+                    {% if selected_version %}
+                        v{{ selected_version.version_number }}
+                    {% else %}
+                        —
+                    {% endif %}
+
+                </strong>
+
+            </div>
+
+
+            <div class="reporting-info-item">
+
+                <span class="reporting-info-label">
+                    Version Type
+                </span>
+
+                <strong>
+
+                    {% if selected_version %}
+                        {{ selected_version.version_type }}
+                    {% else %}
+                        —
+                    {% endif %}
+
+                </strong>
+
+            </div>
+
+
+            <div class="reporting-info-item">
+
+                <span class="reporting-info-label">
+                    Status
+                </span>
+
+                <strong class="reporting-status-ready">
+                    Ready for Reporting
+                </strong>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    {% else %}
+
+    <section class="reporting-empty-state">
+
+        <div class="reporting-empty-icon">
+            📊
+        </div>
+
+        <h2>No Dataset Selected</h2>
+
+        <p>
+            Select an uploaded dataset above to begin reporting.
+        </p>
+
+        <a
+            href="{% url 'reporting:automated_reports' %}"
+            class="reporting-btn reporting-btn-primary"
+        >
+            Start Reporting
+        </a>
+
+    </section>
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         REPORTING MODULES
+    ====================================================== -->
+
+    <section class="reporting-section">
+
+        <div class="reporting-section-heading">
+
+            <div>
+                <h2>Reporting</h2>
+
+                <p>
+                    Access the available reporting tools.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="reporting-module-grid">
+
+
+            <!-- AUTOMATED REPORTS -->
+
+            <a
+                href="{% url 'reporting:automated_reports' %}"
+                class="reporting-module-card"
+            >
+
+                <div class="reporting-module-icon">
+                    📈
+                </div>
+
+                <h3>
+                    Automated Reports
+                </h3>
+
+                <p>
+                    Generate a standardized report from
+                    your selected dataset.
+                </p>
+
+                <span>
+                    Generate →
+                </span>
+
+            </a>
+
+
+            <!-- CUSTOM REPORTS -->
+
+            <a
+                href="{% url 'reporting:custom_reports' %}"
+                class="reporting-module-card"
+            >
+
+                <div class="reporting-module-icon">
+                    🛠
+                </div>
+
+                <h3>
+                    Custom Reports
+                </h3>
+
+                <p>
+                    Build reports using configurable
+                    reporting options.
+                </p>
+
+                <span>
+                    Open →
+                </span>
+
+            </a>
+
+
+            <!-- REPORT HISTORY -->
+
+            <a
+                href="{% url 'reporting:report_history' %}"
+                class="reporting-module-card"
+            >
+
+                <div class="reporting-module-icon">
+                    🕘
+                </div>
+
+                <h3>
+                    Report History
+                </h3>
+
+                <p>
+                    Review previously generated reports
+                    and their data sources.
+                </p>
+
+                <span>
+                    View History →
+                </span>
+
+            </a>
+
+
+            <!-- EXPORT CENTER -->
+
+            <a
+                href="{% url 'reporting:export_center' %}"
+                class="reporting-module-card"
+            >
+
+                <div class="reporting-module-icon">
+                    📤
+                </div>
+
+                <h3>
+                    Export Center
+                </h3>
+
+                <p>
+                    Access available report export
+                    options.
+                </p>
+
+                <span>
+                    Open →
+                </span>
+
+            </a>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         RECENT REPORTS
+    ====================================================== -->
+
+    <section class="reporting-card">
+
+        <div class="reporting-card-header">
+
+            <div>
+                <h2>Recent Reports</h2>
+
+                <p>
+                    Your latest generated reports.
+                </p>
+            </div>
+
+            <a
+                href="{% url 'reporting:report_history' %}"
+                class="reporting-text-link"
+            >
+                View All
+            </a>
+
+        </div>
+
+
+        {% if recent_reports %}
+
+        <div class="reporting-table-wrapper">
+
+            <table class="reporting-table">
+
+                <thead>
+
+                    <tr>
+                        <th>Report</th>
+                        <th>Dataset</th>
+                        <th>Version</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for report in recent_reports %}
+
+                    <tr>
+
+                        <td>
+
+                            <a
+                                href="{% url 'reporting:report_detail' report.id %}"
+                                class="reporting-table-link"
+                            >
+                                {{ report.name }}
+                            </a>
+
+                        </td>
+
+                        <td>
+                            {{ report.dataset.name }}
+                        </td>
+
+                        <td>
+                            v{{ report.dataset_version.version_number }}
+                        </td>
+
+                        <td>
+                            {{ report.report_type }}
+                        </td>
+
+                        <td>
+
+                            <span
+                                class="reporting-status reporting-status-{{ report.status|lower }}"
+                            >
+                                {{ report.status }}
+                            </span>
+
+                        </td>
+
+                        <td>
+                            {{ report.created_at|date:"d M Y, H:i" }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="reporting-table-empty">
+
+            <p>
+                No reports have been generated yet.
+            </p>
+
+            <a
+                href="{% url 'reporting:automated_reports' %}"
+                class="reporting-btn reporting-btn-primary"
+            >
+                Generate Your First Report
+            </a>
+
+        </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- =====================================================
+         CUSTOM REPORTS
+    ====================================================== -->
+
+    <section class="reporting-card">
+
+        <div class="reporting-card-header">
+
+            <div>
+                <h2>Saved Custom Reports</h2>
+
+                <p>
+                    Your saved custom report definitions.
+                </p>
+            </div>
+
+            <a
+                href="{% url 'reporting:custom_reports' %}"
+                class="reporting-text-link"
+            >
+                View All
+            </a>
+
+        </div>
+
+
+        {% if recent_custom_reports %}
+
+        <div class="reporting-table-wrapper">
+
+            <table class="reporting-table">
+
+                <thead>
+
+                    <tr>
+                        <th>Name</th>
+                        <th>Dataset</th>
+                        <th>Version</th>
+                        <th>Updated</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for custom_report in recent_custom_reports %}
+
+                    <tr>
+
+                        <td>
+                            {{ custom_report.name }}
+                        </td>
+
+                        <td>
+                            {{ custom_report.dataset.name }}
+                        </td>
+
+                        <td>
+                            v{{ custom_report.dataset_version.version_number }}
+                        </td>
+
+                        <td>
+                            {{ custom_report.updated_at|date:"d M Y, H:i" }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="reporting-table-empty">
+
+            <p>
+                No saved custom reports yet.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </section>
+
+</div>
+
+{% endblock %}

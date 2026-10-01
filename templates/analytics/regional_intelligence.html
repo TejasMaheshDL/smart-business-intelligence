@@ -1,0 +1,4037 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Regional Intelligence</title>
+
+    <!-- =====================================================
+         FONT AWESOME
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+      <link
+        rel="stylesheet"
+        href="{% static 'css/smart_sidebar.css' %}"
+    >
+
+    <!-- =====================================================
+         CHART.JS
+    ====================================================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ====================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family:
+                Inter,
+                "Segoe UI",
+                Arial,
+                sans-serif;
+
+            background: #07111f;
+            color: #f4f8fc;
+        }
+
+
+        /* =====================================================
+           SMART SIDEBAR
+        ====================================================== */
+
+        .smart-sidebar {
+
+            position: fixed;
+
+            top: 0;
+            left: 0;
+            bottom: 0;
+
+            width: 270px;
+
+            height: 100vh;
+
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    #081827 0%,
+                    #071522 100%
+                );
+
+            border-right:
+                1px solid rgba(255,255,255,.075);
+
+            z-index: 1000;
+
+            scrollbar-width: thin;
+            scrollbar-color:
+                rgba(255,255,255,.15)
+                transparent;
+        }
+
+        .smart-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .smart-sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .smart-sidebar::-webkit-scrollbar-thumb {
+            background:
+                rgba(255,255,255,.15);
+
+            border-radius: 10px;
+        }
+
+
+        /* =====================================================
+           SIDEBAR INCLUDE AREA
+        ====================================================== */
+
+        .sidebar-wrapper {
+
+            position: fixed;
+
+            top: 0;
+            left: 0;
+            bottom: 0;
+
+            width: 270px;
+
+            height: 100vh;
+
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    #081827,
+                    #071522
+                );
+
+            border-right:
+                1px solid rgba(255,255,255,.075);
+
+            z-index: 1000;
+
+            scrollbar-width: thin;
+            scrollbar-color:
+                rgba(255,255,255,.15)
+                transparent;
+        }
+
+        .sidebar-wrapper::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-wrapper::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-wrapper::-webkit-scrollbar-thumb {
+            background:
+                rgba(255,255,255,.15);
+
+            border-radius: 10px;
+        }
+
+
+        /* =====================================================
+           MAIN PAGE
+        ====================================================== */
+
+        .regional-page {
+
+            position: fixed;
+
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 270px;
+
+            width: calc(100% - 270px);
+            height: 100vh;
+
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            background:
+                radial-gradient(
+                    circle at 80% 0%,
+                    rgba(79,140,255,.07),
+                    transparent 32%
+                ),
+
+                radial-gradient(
+                    circle at 20% 100%,
+                    rgba(56,189,248,.045),
+                    transparent 30%
+                ),
+
+                #07111f;
+
+            scrollbar-width: thin;
+
+            scrollbar-color:
+                rgba(255,255,255,.16)
+                transparent;
+        }
+
+        .regional-page::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .regional-page::-webkit-scrollbar-track {
+            background:
+                rgba(255,255,255,.015);
+        }
+
+        .regional-page::-webkit-scrollbar-thumb {
+            background:
+                rgba(255,255,255,.14);
+
+            border-radius: 10px;
+        }
+
+
+        .regional-container {
+
+            width: 100%;
+
+            max-width: 1550px;
+
+            margin: 0 auto;
+
+            padding: 30px;
+        }
+
+
+        /* =====================================================
+           HEADER
+        ====================================================== */
+
+        .regional-header {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 20px;
+
+            margin-bottom: 25px;
+        }
+
+
+        .regional-title-area {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 15px;
+        }
+
+
+        .regional-icon {
+
+            width: 58px;
+            height: 58px;
+
+            flex: 0 0 58px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 17px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #4f8cff,
+                    #8b7cff
+                );
+
+            color: #ffffff;
+
+            font-size: 24px;
+
+            box-shadow:
+                0 12px 30px
+                rgba(79,140,255,.22);
+        }
+
+
+        .regional-title {
+
+            margin: 0;
+
+            font-size: 29px;
+
+            font-weight: 800;
+
+            color: #f4f8fc;
+
+            letter-spacing: -.6px;
+        }
+
+
+        .regional-subtitle {
+
+            margin: 6px 0 0;
+
+            color: #8da3b8;
+
+            font-size: 14px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           FILTER CARD
+        ====================================================== */
+
+        .filter-card {
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #0d1c2d,
+                    #0b1929
+                );
+
+            border:
+                1px solid
+                rgba(255,255,255,.075);
+
+            border-radius: 16px;
+
+            padding: 20px;
+
+            box-shadow:
+                0 18px 45px
+                rgba(0,0,0,.20);
+
+            margin-bottom: 25px;
+        }
+
+
+        .filter-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                minmax(210px, 1.4fr)
+                minmax(170px, 1fr)
+                minmax(150px, 1fr)
+                minmax(150px, 1fr)
+                auto;
+
+            gap: 14px;
+
+            align-items: end;
+        }
+
+
+        .filter-group {
+            min-width: 0;
+        }
+
+
+        .filter-label {
+
+            display: block;
+
+            margin-bottom: 7px;
+
+            color: #8da3b8;
+
+            font-size: 11px;
+
+            font-weight: 800;
+
+            text-transform: uppercase;
+
+            letter-spacing: .55px;
+        }
+
+
+        .filter-input,
+        .filter-select {
+
+            width: 100%;
+
+            height: 44px;
+
+            padding: 0 13px;
+
+            border:
+                1px solid
+                rgba(255,255,255,.10);
+
+            border-radius: 10px;
+
+            background: #10243a;
+
+            color: #f4f8fc;
+
+            font-size: 13px;
+
+            outline: none;
+
+            transition: .2s ease;
+        }
+
+
+        .filter-input:hover,
+        .filter-select:hover {
+
+            border-color:
+                rgba(79,140,255,.35);
+        }
+
+
+        .filter-input:focus,
+        .filter-select:focus {
+
+            border-color: #4f8cff;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(79,140,255,.10);
+        }
+
+
+        .filter-select option {
+
+            background: #0d1c2d;
+
+            color: #f4f8fc;
+        }
+
+
+        .filter-button {
+
+            height: 44px;
+
+            border: 0;
+
+            border-radius: 10px;
+
+            padding: 0 20px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #4f8cff,
+                    #6f73ff
+                );
+
+            color: #ffffff;
+
+            font-size: 13px;
+
+            font-weight: 800;
+
+            cursor: pointer;
+
+            transition: .2s ease;
+
+            box-shadow:
+                0 8px 22px
+                rgba(79,140,255,.16);
+        }
+
+
+        .filter-button:hover {
+
+            transform:
+                translateY(-1px);
+
+            box-shadow:
+                0 12px 28px
+                rgba(79,140,255,.25);
+        }
+
+
+        .custom-date-row {
+
+            display: none;
+
+            grid-template-columns:
+                1fr 1fr;
+
+            gap: 14px;
+
+            margin-top: 14px;
+        }
+
+
+        .custom-date-row.active {
+            display: grid;
+        }
+
+
+        /* =====================================================
+           DATASET STATUS
+        ====================================================== */
+
+        .dataset-status {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            flex-wrap: wrap;
+
+            gap: 12px;
+
+            margin-top: 17px;
+
+            padding-top: 15px;
+
+            border-top:
+                1px solid
+                rgba(255,255,255,.06);
+        }
+
+
+        .dataset-info {
+
+            display: flex;
+
+            align-items: center;
+
+            flex-wrap: wrap;
+
+            gap: 9px;
+
+            color: #8da3b8;
+
+            font-size: 12px;
+        }
+
+
+        .dataset-name {
+
+            color: #f4f8fc;
+
+            font-weight: 800;
+        }
+
+
+        .version-badge {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 5px;
+
+            padding: 5px 9px;
+
+            border-radius: 999px;
+
+            background:
+                rgba(139,124,255,.12);
+
+            border:
+                1px solid
+                rgba(139,124,255,.18);
+
+            color: #a99eff;
+
+            font-size: 10px;
+
+            font-weight: 800;
+        }
+
+
+        .date-info {
+
+            color: #667e94;
+
+            font-size: 11px;
+        }
+
+
+        /* =====================================================
+           ALERTS
+        ====================================================== */
+
+        .alert {
+
+            display: flex;
+
+            align-items: flex-start;
+
+            gap: 11px;
+
+            padding: 14px 16px;
+
+            margin-bottom: 20px;
+
+            border-radius: 13px;
+
+            font-size: 13px;
+
+            line-height: 1.5;
+        }
+
+
+        .alert-error {
+
+            background:
+                rgba(255,100,124,.08);
+
+            border:
+                1px solid
+                rgba(255,100,124,.20);
+
+            color: #ff9cac;
+        }
+
+
+        .alert-warning {
+
+            background:
+                rgba(255,159,90,.08);
+
+            border:
+                1px solid
+                rgba(255,159,90,.20);
+
+            color: #ffc08d;
+        }
+
+
+        /* =====================================================
+           SECTION HEADINGS
+        ====================================================== */
+
+        .section-heading {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 15px;
+
+            margin: 30px 0 15px;
+        }
+
+
+        .section-heading h2 {
+
+            margin: 0;
+
+            color: #f4f8fc;
+
+            font-size: 18px;
+
+            font-weight: 800;
+        }
+
+
+        .section-heading span {
+
+            color: #667e94;
+
+            font-size: 11px;
+        }
+
+
+        /* =====================================================
+           KPI GRID
+        ====================================================== */
+
+.kpi-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 15px;
+}
+
+
+/* =========================================================
+   KPI CARD BASE
+   ========================================================= */
+
+.kpi-card {
+
+    position: relative;
+
+    min-height: 142px;
+
+    overflow: hidden;
+
+    padding: 19px;
+
+    border-radius: 16px;
+
+    color: #ffffff;
+
+    background:
+        var(--kpi-bg);
+
+    border:
+        1px solid
+        var(--kpi-border);
+
+    box-shadow:
+        0 14px 32px
+        var(--kpi-shadow);
+
+    transition:
+        transform .22s ease,
+        box-shadow .22s ease,
+        border-color .22s ease;
+}
+
+
+/* =========================================================
+   HOVER
+   ========================================================= */
+
+.kpi-card:hover {
+
+    transform:
+        translateY(-3px);
+
+    border-color:
+        rgba(255,255,255,.28);
+
+    box-shadow:
+        0 20px 42px
+        var(--kpi-shadow);
+}
+
+
+/* =========================================================
+   DECORATIVE CIRCLES
+   ========================================================= */
+
+.kpi-card::before {
+
+    content: "";
+
+    position: absolute;
+
+    width: 150px;
+    height: 150px;
+
+    right: -60px;
+    bottom: -75px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255,255,255,.075);
+
+    pointer-events: none;
+}
+
+
+.kpi-card::after {
+
+    content: "";
+
+    position: absolute;
+
+    width: 65px;
+    height: 65px;
+
+    left: -30px;
+    top: -30px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255,255,255,.045);
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   BLUE
+   ========================================================= */
+
+.kpi-blue {
+
+    --kpi-color:
+        #60a5fa;
+
+    --kpi-bg:
+        linear-gradient(
+            135deg,
+            #163d7a,
+            #17458f
+        );
+
+    --kpi-border:
+        rgba(96,165,250,.45);
+
+    --kpi-shadow:
+        rgba(23,69,143,.32);
+}
+
+
+/* =========================================================
+   PURPLE
+   ========================================================= */
+
+.kpi-purple {
+
+    --kpi-color:
+        #a78bfa;
+
+    --kpi-bg:
+        linear-gradient(
+            135deg,
+            #38256f,
+            #4b3192
+        );
+
+    --kpi-border:
+        rgba(167,139,250,.45);
+
+    --kpi-shadow:
+        rgba(75,49,146,.32);
+}
+
+
+/* =========================================================
+   GREEN
+   ========================================================= */
+
+.kpi-green {
+
+    --kpi-color:
+        #4ade80;
+
+    --kpi-bg:
+        linear-gradient(
+            135deg,
+            #075c50,
+            #087765
+        );
+
+    --kpi-border:
+        rgba(74,222,128,.45);
+
+    --kpi-shadow:
+        rgba(8,119,101,.32);
+}
+
+
+/* =========================================================
+   ORANGE
+   ========================================================= */
+
+.kpi-orange {
+
+    --kpi-color:
+        #fbbf24;
+
+    --kpi-bg:
+        linear-gradient(
+            135deg,
+            #713c19,
+            #9a5420
+        );
+
+    --kpi-border:
+        rgba(251,191,36,.45);
+
+    --kpi-shadow:
+        rgba(154,84,32,.32);
+}
+
+
+/* =========================================================
+   CYAN
+   ========================================================= */
+
+.kpi-cyan {
+
+    --kpi-color:
+        #22d3ee;
+
+    --kpi-bg:
+        linear-gradient(
+            135deg,
+            #0891b2,
+            #0e7490
+        );
+
+    --kpi-border:
+        rgba(34,211,238,.45);
+
+    --kpi-shadow:
+        rgba(8,145,178,.30);
+}
+
+
+/* =========================================================
+   PINK
+   ========================================================= */
+
+.kpi-pink {
+
+    --kpi-color:
+        #f472b6;
+
+    --kpi-bg:
+        linear-gradient(
+            135deg,
+            #db2777,
+            #be185d
+        );
+
+    --kpi-border:
+        rgba(244,114,182,.45);
+
+    --kpi-shadow:
+        rgba(219,39,119,.30);
+}
+
+
+/* =========================================================
+   RED
+   ========================================================= */
+
+.kpi-red {
+
+    --kpi-color:
+        #fb7185;
+
+    --kpi-bg:
+        linear-gradient(
+            135deg,
+            #681d2d,
+            #8f263d
+        );
+
+    --kpi-border:
+        rgba(251,113,133,.45);
+
+    --kpi-shadow:
+        rgba(143,38,61,.32);
+}
+
+
+/* =========================================================
+   INDIGO
+   ========================================================= */
+
+.kpi-indigo {
+
+    --kpi-color:
+        #a5b4fc;
+
+    --kpi-bg:
+        linear-gradient(
+            135deg,
+            #2d3278,
+            #4046a1
+        );
+
+    --kpi-border:
+        rgba(165,180,252,.45);
+
+    --kpi-shadow:
+        rgba(64,70,161,.32);
+}
+
+
+/* =========================================================
+   TOP ROW
+   ========================================================= */
+
+.kpi-top {
+
+    position: relative;
+
+    z-index: 2;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+}
+
+
+/* =========================================================
+   LABEL
+   ========================================================= */
+
+.kpi-label {
+
+    position: relative;
+
+    z-index: 2;
+
+    color:
+        rgba(255,255,255,.82);
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    text-transform: uppercase;
+
+    letter-spacing: .65px;
+}
+
+
+/* =========================================================
+   ICON
+   ========================================================= */
+
+.kpi-icon {
+
+    position: relative;
+
+    z-index: 2;
+
+    width: 36px;
+    height: 36px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background:
+        rgba(255,255,255,.10);
+
+    border:
+        1px solid
+        rgba(255,255,255,.10);
+
+    color:
+        var(--kpi-color);
+
+    font-size: 14px;
+
+    box-shadow:
+        inset 0 1px 0
+        rgba(255,255,255,.08);
+}
+
+
+/* =========================================================
+   VALUE
+   ========================================================= */
+
+.kpi-value {
+
+    position: relative;
+
+    z-index: 2;
+
+    margin-top: 18px;
+
+    color:
+        #ffffff;
+
+    font-size: 25px;
+
+    line-height: 1;
+
+    font-weight: 800;
+
+    letter-spacing: -.5px;
+}
+
+
+/* =========================================================
+   SUBTITLE
+   ========================================================= */
+
+.kpi-subtitle {
+
+    position: relative;
+
+    z-index: 2;
+
+    margin-top: 10px;
+
+    color:
+        rgba(255,255,255,.64);
+
+    font-size: 10px;
+
+    line-height: 1.4;
+}
+
+        /* =====================================================
+           CHART GRID
+        ====================================================== */
+
+        .chart-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, minmax(0,1fr));
+
+            gap: 17px;
+        }
+
+
+        .chart-card {
+
+            min-width: 0;
+
+            padding: 19px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #0d1c2d,
+                    #0b1929
+                );
+
+            border:
+                1px solid
+                rgba(255,255,255,.075);
+
+            border-radius: 16px;
+
+            box-shadow:
+                0 18px 45px
+                rgba(0,0,0,.20);
+        }
+
+
+        .chart-card.full-width {
+
+            grid-column: 1 / -1;
+        }
+
+
+        .chart-header {
+
+            display: flex;
+
+            align-items: flex-start;
+
+            justify-content: space-between;
+
+            gap: 12px;
+
+            margin-bottom: 14px;
+        }
+
+
+        .chart-title-area h3 {
+
+            margin: 0;
+
+            color: #f4f8fc;
+
+            font-size: 14px;
+
+            font-weight: 800;
+        }
+
+
+        .chart-title-area p {
+
+            margin: 4px 0 0;
+
+            color: #667e94;
+
+            font-size: 10px;
+
+            line-height: 1.4;
+        }
+
+
+        .chart-badge {
+
+            padding: 5px 8px;
+
+            border-radius: 7px;
+
+            background:
+                rgba(255,255,255,.045);
+
+            border:
+                1px solid
+                rgba(255,255,255,.06);
+
+            color: #8da3b8;
+
+            font-size: 9px;
+
+            font-weight: 800;
+
+            letter-spacing: .4px;
+
+            white-space: nowrap;
+        }
+
+
+        .chart-wrapper {
+
+            position: relative;
+
+            width: 100%;
+
+            height: 310px;
+        }
+
+
+        .chart-wrapper.tall {
+
+            height: 350px;
+        }
+
+
+        /* =====================================================
+           UNAVAILABLE
+        ====================================================== */
+
+        .unavailable-card {
+
+            min-height: 310px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            text-align: center;
+
+            padding: 25px;
+
+            border:
+                1px dashed
+                rgba(255,255,255,.12);
+
+            background:
+                rgba(255,255,255,.018);
+
+            border-radius: 13px;
+        }
+
+
+        .unavailable-inner {
+
+            max-width: 320px;
+        }
+
+
+        .unavailable-icon {
+
+            width: 48px;
+            height: 48px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            margin: 0 auto 12px;
+
+            border-radius: 13px;
+
+            background:
+                rgba(255,255,255,.05);
+
+            color: #667e94;
+
+            font-size: 17px;
+        }
+
+
+        .unavailable-inner h4 {
+
+            margin: 0;
+
+            color: #d7e2ec;
+
+            font-size: 13px;
+        }
+
+
+        .unavailable-inner p {
+
+            margin: 7px 0 0;
+
+            color: #667e94;
+
+            font-size: 11px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           INSIGHTS
+        ====================================================== */
+
+        .insights-section {
+
+            margin-top: 30px;
+
+            padding-bottom: 35px;
+        }
+
+
+        .insights-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, minmax(0,1fr));
+
+            gap: 14px;
+        }
+
+
+        .insight-card {
+
+            display: flex;
+
+            gap: 13px;
+
+            padding: 16px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #0d1c2d,
+                    #0b1929
+                );
+
+            border:
+                1px solid
+                rgba(255,255,255,.075);
+
+            border-radius: 15px;
+
+            box-shadow:
+                0 18px 40px
+                rgba(0,0,0,.16);
+        }
+
+
+        .insight-icon {
+
+            flex: 0 0 40px;
+
+            width: 40px;
+            height: 40px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 11px;
+
+            font-size: 14px;
+        }
+
+
+        .insight-positive .insight-icon {
+
+            background:
+                rgba(40,215,163,.10);
+
+            color: #28d7a3;
+        }
+
+
+        .insight-warning .insight-icon {
+
+            background:
+                rgba(255,159,90,.10);
+
+            color: #ff9f5a;
+        }
+
+
+        .insight-neutral .insight-icon {
+
+            background:
+                rgba(56,189,248,.10);
+
+            color: #38bdf8;
+        }
+
+
+        .insight-content h4 {
+
+            margin: 0 0 5px;
+
+            color: #f4f8fc;
+
+            font-size: 13px;
+
+            font-weight: 800;
+        }
+
+
+        .insight-content p {
+
+            margin: 0;
+
+            color: #8da3b8;
+
+            font-size: 11px;
+
+            line-height: 1.55;
+        }
+
+
+        .no-insights {
+
+            padding: 25px;
+
+            border:
+                1px dashed
+                rgba(255,255,255,.12);
+
+            border-radius: 14px;
+
+            background:
+                rgba(255,255,255,.018);
+
+            color: #667e94;
+
+            text-align: center;
+
+            font-size: 12px;
+        }
+
+
+        /* =====================================================
+           CHART.JS DARK THEME
+        ====================================================== */
+
+        canvas {
+            max-width: 100%;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ====================================================== */
+
+        @media (max-width: 1250px) {
+
+            .filter-grid {
+
+                grid-template-columns:
+                    repeat(3, minmax(0,1fr));
+            }
+
+            .kpi-grid {
+
+                grid-template-columns:
+                    repeat(2, minmax(0,1fr));
+            }
+        }
+
+
+        @media (max-width: 950px) {
+
+            .sidebar-wrapper,
+            .smart-sidebar {
+
+                width: 230px;
+            }
+
+            .regional-page {
+
+                left: 230px;
+
+                width:
+                    calc(100% - 230px);
+            }
+
+            .chart-grid {
+
+                grid-template-columns: 1fr;
+            }
+
+            .chart-card.full-width {
+
+                grid-column: auto;
+            }
+
+            .insights-grid {
+
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+        @media (max-width: 750px) {
+
+            html,
+            body {
+
+                overflow: auto;
+            }
+
+            .sidebar-wrapper,
+            .smart-sidebar {
+
+                position: relative;
+
+                width: 100%;
+
+                height: auto;
+
+                max-height: none;
+            }
+
+            .regional-page {
+
+                position: relative;
+
+                left: 0;
+
+                width: 100%;
+
+                height: auto;
+
+                overflow: visible;
+            }
+
+            .regional-container {
+
+                padding: 20px;
+            }
+
+            .filter-grid {
+
+                grid-template-columns: 1fr;
+            }
+
+            .custom-date-row {
+
+                grid-template-columns: 1fr;
+            }
+
+            .regional-header {
+
+                align-items: flex-start;
+            }
+        }
+
+
+        @media (max-width: 520px) {
+
+            .kpi-grid {
+
+                grid-template-columns: 1fr;
+            }
+
+            .regional-title {
+
+                font-size: 23px;
+            }
+
+            .regional-icon {
+
+                width: 50px;
+                height: 50px;
+
+                flex-basis: 50px;
+            }
+
+            .chart-wrapper,
+            .chart-wrapper.tall {
+
+                height: 270px;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =====================================================
+         SIDEBAR
+         ===================================================== -->
+
+    <div class="sidebar-wrapper">
+
+        {% include "includes/smart_sidebar.html" %}
+
+    </div>
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+         ===================================================== -->
+
+    <main class="regional-page">
+
+        <div class="regional-container">
+
+
+            <!-- =================================================
+                 HEADER
+            ================================================== -->
+
+            <div class="regional-header">
+
+                <div class="regional-title-area">
+
+                    <div class="regional-icon">
+
+                        <i class="fas fa-globe-asia"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h1 class="regional-title">
+                            Regional Intelligence
+                        </h1>
+
+                        <p class="regional-subtitle">
+                            Analyze sales, units, profitability
+                            and performance across business regions.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 ERROR
+            ================================================== -->
+
+            {% if error %}
+
+                <div class="alert alert-error">
+
+                    <i class="fas fa-circle-exclamation"></i>
+
+                    <div>
+                        {{ error }}
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+
+            <!-- =================================================
+                 WARNING
+            ================================================== -->
+
+            {% if warning and not error %}
+
+                <div class="alert alert-warning">
+
+                    <i class="fas fa-triangle-exclamation"></i>
+
+                    <div>
+                        {{ warning }}
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+
+            {% if regional_datasets %}
+
+
+            <!-- =================================================
+                 FILTER PANEL
+            ================================================== -->
+
+            <div class="filter-card">
+
+                <form method="get">
+
+                    <div class="filter-grid">
+
+
+                        <!-- Dataset -->
+
+                        <div class="filter-group">
+
+                            <label
+                                class="filter-label"
+                                for="regionalDataset"
+                            >
+                                Dataset
+                            </label>
+
+                            <select
+                                class="filter-select"
+                                id="regionalDataset"
+                                name="dataset"
+                            >
+
+                                {% for dataset in regional_datasets %}
+
+                                    <option
+                                        value="{{ dataset.id }}"
+                                        {% if selected_dataset and dataset.id == selected_dataset.id %}
+                                            selected
+                                        {% endif %}
+                                    >
+                                        {{ dataset.name }}
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- Analysis Period -->
+
+                        <div class="filter-group">
+
+                            <label
+                                class="filter-label"
+                                for="regionalRange"
+                            >
+                                Analysis Period
+                            </label>
+
+                            <select
+                                class="filter-select"
+                                id="regionalRange"
+                                name="range"
+                            >
+
+                                {% for value, label in date_range_options.items %}
+
+                                    <option
+                                        value="{{ value }}"
+                                        {% if selected_range == value %}
+                                            selected
+                                        {% endif %}
+                                    >
+                                        {{ label }}
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- From Date -->
+
+                        <div class="filter-group">
+
+                            <label
+                                class="filter-label"
+                                for="fromDate"
+                            >
+                                From Date
+                            </label>
+
+                            <input
+                                class="filter-input"
+                                type="date"
+                                id="fromDate"
+                                name="from_date"
+                                value="{% if analysis_from_date %}{{ analysis_from_date|date:'Y-m-d' }}{% endif %}"
+                            >
+
+                        </div>
+
+
+                        <!-- To Date -->
+
+                        <div class="filter-group">
+
+                            <label
+                                class="filter-label"
+                                for="toDate"
+                            >
+                                To Date
+                            </label>
+
+                            <input
+                                class="filter-input"
+                                type="date"
+                                id="toDate"
+                                name="to_date"
+                                value="{% if analysis_to_date %}{{ analysis_to_date|date:'Y-m-d' }}{% endif %}"
+                            >
+
+                        </div>
+
+
+                        <!-- Apply -->
+
+                        <div class="filter-group">
+
+                            <button
+                                type="submit"
+                                class="filter-button"
+                            >
+
+                                <i class="fas fa-filter"></i>
+
+                                Apply
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Custom Date Indicator -->
+
+                    <div
+                        class="
+                            custom-date-row
+                            {% if selected_range == 'custom' %}
+                                active
+                            {% endif %}
+                        "
+                        id="customDateRow"
+                    >
+
+                        <div class="filter-group">
+
+                            <div
+                                style="
+                                    padding: 11px 13px;
+                                    border-radius: 10px;
+                                    background:
+                                        rgba(79,140,255,.06);
+                                    border:
+                                        1px solid
+                                        rgba(79,140,255,.12);
+                                    color: #8da3b8;
+                                    font-size: 11px;
+                                "
+                            >
+
+                                <i
+                                    class="fas fa-calendar-days"
+                                    style="color:#4f8cff;"
+                                ></i>
+
+                                Select the custom
+                                <strong style="color:#d7e2ec;">
+                                    From Date
+                                </strong>
+                                above.
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="filter-group">
+
+                            <div
+                                style="
+                                    padding: 11px 13px;
+                                    border-radius: 10px;
+                                    background:
+                                        rgba(56,189,248,.06);
+                                    border:
+                                        1px solid
+                                        rgba(56,189,248,.12);
+                                    color: #8da3b8;
+                                    font-size: 11px;
+                                "
+                            >
+
+                                <i
+                                    class="fas fa-calendar-check"
+                                    style="color:#38bdf8;"
+                                ></i>
+
+                                Select the custom
+                                <strong style="color:#d7e2ec;">
+                                    To Date
+                                </strong>
+                                above.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+
+                <!-- Dataset Information -->
+
+                {% if selected_dataset %}
+
+                    <div class="dataset-status">
+
+                        <div class="dataset-info">
+
+                            <span>
+                                <i class="fas fa-database"></i>
+                            </span>
+
+                            <span class="dataset-name">
+                                {{ selected_dataset.name }}
+                            </span>
+
+                            {% if selected_version %}
+
+                                <span class="version-badge">
+
+                                    <i class="fas fa-code-branch"></i>
+
+                                    Version
+                                    {{ selected_version.version_number }}
+
+                                    ·
+
+                                    {{ selected_version.version_type }}
+
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        {% if available_from_date and available_to_date %}
+
+                            <div class="date-info">
+
+                                Available:
+
+                                {{ available_from_date|date:"d M Y" }}
+
+                                –
+
+                                {{ available_to_date|date:"d M Y" }}
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- =================================================
+                 KPI SECTION
+            ================================================== -->
+
+            <div class="section-heading">
+
+                <h2>
+                    Regional Performance Overview
+                </h2>
+
+                <span>
+                    Based on the selected analysis period
+                </span>
+
+            </div>
+
+
+            <div class="kpi-grid">
+
+
+                <!-- Total Regions -->
+
+                <div class="kpi-card kpi-blue">
+
+                    <div class="kpi-top">
+
+                        <span class="kpi-label">
+                            Total Regions
+                        </span>
+
+                        <div class="kpi-icon">
+                            <i class="fas fa-map"></i>
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-value">
+
+                        {{ metrics.total_regions|default:"—" }}
+
+                    </div>
+
+                    <div class="kpi-subtitle">
+                        Distinct regions in selected data
+                    </div>
+
+                </div>
+
+
+                <!-- Total Sales -->
+
+                <div class="kpi-card kpi-purple">
+
+                    <div class="kpi-top">
+
+                        <span class="kpi-label">
+                            Total Sales
+                        </span>
+
+                        <div class="kpi-icon">
+                            <i class="fas fa-indian-rupee-sign"></i>
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-value">
+
+                        {% if metrics.total_sales is not None %}
+
+                            ₹{{ metrics.total_sales|floatformat:2 }}
+
+                        {% else %}
+
+                            —
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="kpi-subtitle">
+                        Regional sales for selected period
+                    </div>
+
+                </div>
+
+
+                <!-- Total Orders -->
+
+                <div class="kpi-card kpi-green">
+
+                    <div class="kpi-top">
+
+                        <span class="kpi-label">
+                            Total Orders
+                        </span>
+
+                        <div class="kpi-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-value">
+
+                        {% if metrics.total_orders is not None %}
+
+                            {{ metrics.total_orders|floatformat:0 }}
+
+                        {% else %}
+
+                            —
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="kpi-subtitle">
+                        Unique transactions
+                    </div>
+
+                </div>
+
+
+                <!-- Units -->
+
+                <div class="kpi-card kpi-orange">
+
+                    <div class="kpi-top">
+
+                        <span class="kpi-label">
+                            Units Sold
+                        </span>
+
+                        <div class="kpi-icon">
+                            <i class="fas fa-boxes-stacked"></i>
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-value">
+
+                        {% if metrics.units_sold is not None %}
+
+                            {{ metrics.units_sold|floatformat:0 }}
+
+                        {% else %}
+
+                            —
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="kpi-subtitle">
+                        Total quantity sold
+                    </div>
+
+                </div>
+
+
+                <!-- Average Order Value -->
+
+                <div class="kpi-card kpi-cyan">
+
+                    <div class="kpi-top">
+
+                        <span class="kpi-label">
+                            Avg Order Value
+                        </span>
+
+                        <div class="kpi-icon">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-value">
+
+                        {% if metrics.average_order_value is not None %}
+
+                            ₹{{ metrics.average_order_value|floatformat:2 }}
+
+                        {% else %}
+
+                            —
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="kpi-subtitle">
+                        Average value per order
+                    </div>
+
+                </div>
+
+
+                <!-- Profit -->
+
+                <div class="kpi-card kpi-green">
+
+                    <div class="kpi-top">
+
+                        <span class="kpi-label">
+                            Total Profit
+                        </span>
+
+                        <div class="kpi-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-value">
+
+                        {% if metrics.total_profit is not None %}
+
+                            ₹{{ metrics.total_profit|floatformat:2 }}
+
+                        {% else %}
+
+                            —
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="kpi-subtitle">
+                        Total regional profit
+                    </div>
+
+                </div>
+
+
+                <!-- Profit Margin -->
+
+                <div class="kpi-card kpi-pink">
+
+                    <div class="kpi-top">
+
+                        <span class="kpi-label">
+                            Profit Margin
+                        </span>
+
+                        <div class="kpi-icon">
+                            <i class="fas fa-percent"></i>
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-value">
+
+                        {% if metrics.profit_margin is not None %}
+
+                            {{ metrics.profit_margin|floatformat:2 }}%
+
+                        {% else %}
+
+                            —
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="kpi-subtitle">
+                        Profit as percentage of sales
+                    </div>
+
+                </div>
+
+
+                <!-- Growth -->
+
+                <div class="kpi-card kpi-indigo">
+
+                    <div class="kpi-top">
+
+                        <span class="kpi-label">
+                            Regional Growth
+                        </span>
+
+                        <div class="kpi-icon">
+                            <i class="fas fa-arrow-trend-up"></i>
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-value">
+
+                        {% if metrics.regional_growth is not None %}
+
+                            {% if metrics.regional_growth >= 0 %}
+                                +
+                            {% endif %}
+
+                            {{ metrics.regional_growth|floatformat:2 }}%
+
+                        {% else %}
+
+                            —
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="kpi-subtitle">
+                        Compared with previous period
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 CHARTS
+            ================================================== -->
+
+            <div class="section-heading">
+
+                <h2>
+                    Regional Analytics
+                </h2>
+
+                <span>
+                    Interactive regional performance analysis
+                </span>
+
+            </div>
+
+
+            <div class="chart-grid">
+
+
+                <!-- =================================================
+                     SALES TREND
+                ================================================== -->
+
+                <div class="chart-card full-width">
+
+                    <div class="chart-header">
+
+                        <div class="chart-title-area">
+
+                            <h3>
+                                Regional Sales Trend
+                            </h3>
+
+                            <p>
+                                Total sales movement over time
+                            </p>
+
+                        </div>
+
+                        <span class="chart-badge">
+                            TREND
+                        </span>
+
+                    </div>
+
+
+                    {% if chart_data.sales_trend %}
+
+                        <div class="chart-wrapper tall">
+
+                            <canvas
+                                id="regionalSalesTrendChart"
+                            ></canvas>
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="unavailable-card">
+
+                            <div class="unavailable-inner">
+
+                                <div class="unavailable-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+
+                                <h4>
+                                    Regional Sales Trend Unavailable
+                                </h4>
+
+                                <p>
+                                    A compatible date and sales
+                                    column are required for this chart.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- =================================================
+                     SALES BY REGION
+                ================================================== -->
+
+                <div class="chart-card">
+
+                    <div class="chart-header">
+
+                        <div class="chart-title-area">
+
+                            <h3>
+                                Sales by Region
+                            </h3>
+
+                            <p>
+                                Regional sales comparison
+                            </p>
+
+                        </div>
+
+                        <span class="chart-badge">
+                            SALES
+                        </span>
+
+                    </div>
+
+
+                    {% if chart_data.sales_by_region %}
+
+                        <div class="chart-wrapper">
+
+                            <canvas
+                                id="salesByRegionChart"
+                            ></canvas>
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="unavailable-card">
+
+                            <div class="unavailable-inner">
+
+                                <div class="unavailable-icon">
+                                    <i class="fas fa-map-location-dot"></i>
+                                </div>
+
+                                <h4>
+                                    Sales by Region Unavailable
+                                </h4>
+
+                                <p>
+                                    Regional sales information
+                                    is not available.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- =================================================
+                     UNITS BY REGION
+                ================================================== -->
+
+                <div class="chart-card">
+
+                    <div class="chart-header">
+
+                        <div class="chart-title-area">
+
+                            <h3>
+                                Units by Region
+                            </h3>
+
+                            <p>
+                                Quantity sold across regions
+                            </p>
+
+                        </div>
+
+                        <span class="chart-badge">
+                            UNITS
+                        </span>
+
+                    </div>
+
+
+                    {% if chart_data.units_by_region %}
+
+                        <div class="chart-wrapper">
+
+                            <canvas
+                                id="unitsByRegionChart"
+                            ></canvas>
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="unavailable-card">
+
+                            <div class="unavailable-inner">
+
+                                <div class="unavailable-icon">
+                                    <i class="fas fa-boxes-stacked"></i>
+                                </div>
+
+                                <h4>
+                                    Units by Region Unavailable
+                                </h4>
+
+                                <p>
+                                    A quantity or units column
+                                    is required.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- =================================================
+                     PROFIT BY REGION
+                ================================================== -->
+
+                <div class="chart-card">
+
+                    <div class="chart-header">
+
+                        <div class="chart-title-area">
+
+                            <h3>
+                                Profit by Region
+                            </h3>
+
+                            <p>
+                                Regional profitability comparison
+                            </p>
+
+                        </div>
+
+                        <span class="chart-badge">
+                            PROFIT
+                        </span>
+
+                    </div>
+
+
+                    {% if chart_data.profit_by_region %}
+
+                        <div class="chart-wrapper">
+
+                            <canvas
+                                id="profitByRegionChart"
+                            ></canvas>
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="unavailable-card">
+
+                            <div class="unavailable-inner">
+
+                                <div class="unavailable-icon">
+                                    <i class="fas fa-coins"></i>
+                                </div>
+
+                                <h4>
+                                    Profit by Region Unavailable
+                                </h4>
+
+                                <p>
+                                    A compatible profit column
+                                    is required.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- =================================================
+                     SALES CONTRIBUTION
+                ================================================== -->
+
+                <div class="chart-card">
+
+                    <div class="chart-header">
+
+                        <div class="chart-title-area">
+
+                            <h3>
+                                Regional Sales Contribution
+                            </h3>
+
+                            <p>
+                                Share of total sales by region
+                            </p>
+
+                        </div>
+
+                        <span class="chart-badge">
+                            SHARE
+                        </span>
+
+                    </div>
+
+
+                    {% if chart_data.sales_contribution %}
+
+                        <div class="chart-wrapper">
+
+                            <canvas
+                                id="regionalContributionChart"
+                            ></canvas>
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="unavailable-card">
+
+                            <div class="unavailable-inner">
+
+                                <div class="unavailable-icon">
+                                    <i class="fas fa-chart-pie"></i>
+                                </div>
+
+                                <h4>
+                                    Sales Contribution Unavailable
+                                </h4>
+
+                                <p>
+                                    Regional sales contribution
+                                    cannot be calculated.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- =================================================
+                     PERFORMANCE COMPARISON
+                ================================================== -->
+
+                <div class="chart-card full-width">
+
+                    <div class="chart-header">
+
+                        <div class="chart-title-area">
+
+                            <h3>
+                                Regional Performance Comparison
+                            </h3>
+
+                            <p>
+                                Compare sales, units and profit
+                                across regions
+                            </p>
+
+                        </div>
+
+                        <span class="chart-badge">
+                            COMPARISON
+                        </span>
+
+                    </div>
+
+
+                    {% if chart_data.performance_comparison %}
+
+                        <div class="chart-wrapper tall">
+
+                            <canvas
+                                id="regionalPerformanceChart"
+                            ></canvas>
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="unavailable-card">
+
+                            <div class="unavailable-inner">
+
+                                <div class="unavailable-icon">
+                                    <i class="fas fa-chart-column"></i>
+                                </div>
+
+                                <h4>
+                                    Regional Comparison Unavailable
+                                </h4>
+
+                                <p>
+                                    There is not enough compatible
+                                    regional metric data for comparison.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- =================================================
+                     REGIONAL SALES COMPARISON TREND
+                ================================================== -->
+
+                <div class="chart-card full-width">
+
+                    <div class="chart-header">
+
+                        <div class="chart-title-area">
+
+                            <h3>
+                                Regional Sales Comparison Trend
+                            </h3>
+
+                            <p>
+                                Sales movement across the leading regions
+                            </p>
+
+                        </div>
+
+                        <span class="chart-badge">
+                            REGIONAL TREND
+                        </span>
+
+                    </div>
+
+
+                    {% if chart_data.sales_by_date %}
+
+                        <div class="chart-wrapper tall">
+
+                            <canvas
+                                id="regionalSalesComparisonChart"
+                            ></canvas>
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="unavailable-card">
+
+                            <div class="unavailable-inner">
+
+                                <div class="unavailable-icon">
+                                    <i class="fas fa-chart-area"></i>
+                                </div>
+
+                                <h4>
+                                    Regional Comparison Trend Unavailable
+                                </h4>
+
+                                <p>
+                                    A compatible date, region and
+                                    sales column are required.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 SMART REGIONAL INSIGHTS
+            ================================================== -->
+
+            <div class="insights-section">
+
+                <div class="section-heading">
+
+                    <h2>
+                        Smart Regional Insights
+                    </h2>
+
+                    <span>
+                        Rule-based observations from your data
+                    </span>
+
+                </div>
+
+
+                {% if insights %}
+
+                    <div class="insights-grid">
+
+                        {% for insight in insights %}
+
+                            <div
+                                class="
+                                    insight-card
+                                    insight-{{ insight.type }}
+                                "
+                            >
+
+                                <div class="insight-icon">
+
+                                    {% if insight.type == "positive" %}
+
+                                        <i class="fas fa-arrow-trend-up"></i>
+
+                                    {% elif insight.type == "warning" %}
+
+                                        <i class="fas fa-triangle-exclamation"></i>
+
+                                    {% else %}
+
+                                        <i class="fas fa-circle-info"></i>
+
+                                    {% endif %}
+
+                                </div>
+
+
+                                <div class="insight-content">
+
+                                    <h4>
+                                        {{ insight.title }}
+                                    </h4>
+
+                                    <p>
+                                        {{ insight.message }}
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <div class="no-insights">
+
+                        <i class="fas fa-lightbulb"></i>
+
+                        No additional regional insights are
+                        available for the selected data and period.
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+
+            {% endif %}
+
+
+        </div>
+
+    </main>
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ====================================================== -->
+
+    <script>
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+
+                /* =================================================
+                   DATA
+                ================================================== */
+
+                const salesTrendData =
+                    {{ sales_trend_json|safe }};
+
+                const salesByRegionData =
+                    {{ sales_by_region_json|safe }};
+
+                const unitsByRegionData =
+                    {{ units_by_region_json|safe }};
+
+                const profitByRegionData =
+                    {{ profit_by_region_json|safe }};
+
+                const salesContributionData =
+                    {{ sales_contribution_json|safe }};
+
+                const performanceComparisonData =
+                    {{ performance_comparison_json|safe }};
+
+                const salesByDateData =
+                    {{ sales_by_date_json|safe }};
+
+
+                /* =================================================
+                   GLOBAL CHART CONFIGURATION
+                ================================================== */
+
+                Chart.defaults.font.family =
+                    "Inter, Segoe UI, Arial, sans-serif";
+
+                Chart.defaults.color =
+                    "#8da3b8";
+
+                Chart.defaults.borderColor =
+                    "rgba(255,255,255,.07)";
+
+
+                const gridColor =
+                    "rgba(148,163,184,.10)";
+
+
+                const tooltipOptions = {
+
+                    backgroundColor:
+                        "rgba(7,17,31,.96)",
+
+                    titleColor:
+                        "#f4f8fc",
+
+                    bodyColor:
+                        "#d7e2ec",
+
+                    borderColor:
+                        "rgba(255,255,255,.10)",
+
+                    borderWidth: 1,
+
+                    padding: 12,
+
+                    cornerRadius: 10,
+
+                    displayColors: true
+                };
+
+
+                /* =================================================
+                   GRADIENT HELPER
+                ================================================== */
+
+                function createGradient(
+                    canvas,
+                    color1,
+                    color2
+                ) {
+
+                    const ctx =
+                        canvas.getContext("2d");
+
+                    const gradient =
+                        ctx.createLinearGradient(
+                            0,
+                            0,
+                            0,
+                            340
+                        );
+
+                    gradient.addColorStop(
+                        0,
+                        color1
+                    );
+
+                    gradient.addColorStop(
+                        1,
+                        color2
+                    );
+
+                    return gradient;
+                }
+
+
+                /* =================================================
+                   1. REGIONAL SALES TREND
+                ================================================== */
+
+                const salesTrendCanvas =
+                    document.getElementById(
+                        "regionalSalesTrendChart"
+                    );
+
+
+                if (
+                    salesTrendCanvas &&
+                    salesTrendData.length
+                ) {
+
+                    const gradient =
+                        createGradient(
+                            salesTrendCanvas,
+                            "rgba(79,140,255,.30)",
+                            "rgba(79,140,255,.015)"
+                        );
+
+
+                    new Chart(
+                        salesTrendCanvas,
+                        {
+
+                            type: "line",
+
+                            data: {
+
+                                labels:
+                                    salesTrendData.map(
+                                        item =>
+                                            item.date
+                                    ),
+
+                                datasets: [
+
+                                    {
+
+                                        label:
+                                            "Sales",
+
+                                        data:
+                                            salesTrendData.map(
+                                                item =>
+                                                    item.sales
+                                            ),
+
+                                        borderColor:
+                                            "#4f8cff",
+
+                                        backgroundColor:
+                                            gradient,
+
+                                        fill: true,
+
+                                        tension: .38,
+
+                                        borderWidth: 3,
+
+                                        pointRadius: 3,
+
+                                        pointHoverRadius: 7,
+
+                                        pointBackgroundColor:
+                                            "#4f8cff",
+
+                                        pointBorderColor:
+                                            "#07111f",
+
+                                        pointBorderWidth: 2
+                                    }
+
+                                ]
+
+                            },
+
+                            options: {
+
+                                responsive: true,
+
+                                maintainAspectRatio: false,
+
+                                interaction: {
+
+                                    mode: "index",
+
+                                    intersect: false
+                                },
+
+                                plugins: {
+
+                                    legend: {
+                                        display: false
+                                    },
+
+                                    tooltip:
+                                        tooltipOptions
+                                },
+
+                                scales: {
+
+                                    x: {
+
+                                        grid: {
+                                            display: false
+                                        },
+
+                                        ticks: {
+                                            color: "#667e94",
+                                            maxRotation: 45
+                                        }
+                                    },
+
+                                    y: {
+
+                                        beginAtZero: true,
+
+                                        grid: {
+                                            color:
+                                                gridColor
+                                        },
+
+                                        ticks: {
+                                            color: "#8da3b8"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    );
+                }
+
+
+                /* =================================================
+                   2. SALES BY REGION
+                ================================================== */
+
+                const salesRegionCanvas =
+                    document.getElementById(
+                        "salesByRegionChart"
+                    );
+
+
+                if (
+                    salesRegionCanvas &&
+                    salesByRegionData.length
+                ) {
+
+                    new Chart(
+                        salesRegionCanvas,
+                        {
+
+                            type: "bar",
+
+                            data: {
+
+                                labels:
+                                    salesByRegionData.map(
+                                        item =>
+                                            item.region
+                                    ),
+
+                                datasets: [
+
+                                    {
+
+                                        label:
+                                            "Sales",
+
+                                        data:
+                                            salesByRegionData.map(
+                                                item =>
+                                                    item.sales
+                                            ),
+
+                                        backgroundColor: [
+
+                                            "#4f8cff",
+                                            "#8b7cff",
+                                            "#38bdf8",
+                                            "#28d7a3",
+                                            "#ff9f5a",
+                                            "#ff647c",
+                                            "#667eea",
+                                            "#14b8a6",
+                                            "#f5c451",
+                                            "#a78bfa"
+
+                                        ],
+
+                                        borderRadius: 8,
+
+                                        borderSkipped: false
+                                    }
+
+                                ]
+
+                            },
+
+                            options: {
+
+                                indexAxis: "y",
+
+                                responsive: true,
+
+                                maintainAspectRatio: false,
+
+                                plugins: {
+
+                                    legend: {
+                                        display: false
+                                    },
+
+                                    tooltip:
+                                        tooltipOptions
+                                },
+
+                                scales: {
+
+                                    x: {
+
+                                        beginAtZero: true,
+
+                                        grid: {
+                                            color:
+                                                gridColor
+                                        },
+
+                                        ticks: {
+                                            color:
+                                                "#8da3b8"
+                                        }
+                                    },
+
+                                    y: {
+
+                                        grid: {
+                                            display: false
+                                        },
+
+                                        ticks: {
+
+                                            color:
+                                                "#d7e2ec",
+
+                                            font: {
+                                                weight:
+                                                    "600"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    );
+                }
+
+
+                /* =================================================
+                   3. UNITS BY REGION
+                ================================================== */
+
+                const unitsRegionCanvas =
+                    document.getElementById(
+                        "unitsByRegionChart"
+                    );
+
+
+                if (
+                    unitsRegionCanvas &&
+                    unitsByRegionData.length
+                ) {
+
+                    new Chart(
+                        unitsRegionCanvas,
+                        {
+
+                            type: "bar",
+
+                            data: {
+
+                                labels:
+                                    unitsByRegionData.map(
+                                        item =>
+                                            item.region
+                                    ),
+
+                                datasets: [
+
+                                    {
+
+                                        label:
+                                            "Units",
+
+                                        data:
+                                            unitsByRegionData.map(
+                                                item =>
+                                                    item.units
+                                            ),
+
+                                        backgroundColor:
+                                            "rgba(40,215,163,.78)",
+
+                                        borderColor:
+                                            "#28d7a3",
+
+                                        borderWidth: 1,
+
+                                        borderRadius: 8,
+
+                                        borderSkipped: false
+                                    }
+
+                                ]
+
+                            },
+
+                            options: {
+
+                                responsive: true,
+
+                                maintainAspectRatio: false,
+
+                                plugins: {
+
+                                    legend: {
+                                        display: false
+                                    },
+
+                                    tooltip:
+                                        tooltipOptions
+                                },
+
+                                scales: {
+
+                                    x: {
+
+                                        grid: {
+                                            display: false
+                                        },
+
+                                        ticks: {
+                                            color:
+                                                "#667e94"
+                                        }
+                                    },
+
+                                    y: {
+
+                                        beginAtZero: true,
+
+                                        grid: {
+                                            color:
+                                                gridColor
+                                        },
+
+                                        ticks: {
+                                            color:
+                                                "#8da3b8"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    );
+                }
+
+
+                /* =================================================
+                   4. PROFIT BY REGION
+                ================================================== */
+
+                const profitRegionCanvas =
+                    document.getElementById(
+                        "profitByRegionChart"
+                    );
+
+
+                if (
+                    profitRegionCanvas &&
+                    profitByRegionData.length
+                ) {
+
+                    new Chart(
+                        profitRegionCanvas,
+                        {
+
+                            type: "bar",
+
+                            data: {
+
+                                labels:
+                                    profitByRegionData.map(
+                                        item =>
+                                            item.region
+                                    ),
+
+                                datasets: [
+
+                                    {
+
+                                        label:
+                                            "Profit",
+
+                                        data:
+                                            profitByRegionData.map(
+                                                item =>
+                                                    item.profit
+                                            ),
+
+                                        backgroundColor:
+                                            profitByRegionData.map(
+                                                item =>
+
+                                                    item.profit < 0
+
+                                                        ? "#ff647c"
+
+                                                        : "#8b7cff"
+                                            ),
+
+                                        borderRadius: 8,
+
+                                        borderSkipped: false
+                                    }
+
+                                ]
+
+                            },
+
+                            options: {
+
+                                responsive: true,
+
+                                maintainAspectRatio: false,
+
+                                plugins: {
+
+                                    legend: {
+                                        display: false
+                                    },
+
+                                    tooltip:
+                                        tooltipOptions
+                                },
+
+                                scales: {
+
+                                    x: {
+
+                                        grid: {
+                                            display: false
+                                        },
+
+                                        ticks: {
+                                            color:
+                                                "#667e94"
+                                        }
+                                    },
+
+                                    y: {
+
+                                        grid: {
+                                            color:
+                                                gridColor
+                                        },
+
+                                        ticks: {
+                                            color:
+                                                "#8da3b8"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    );
+                }
+
+
+                /* =================================================
+                   5. SALES CONTRIBUTION
+                ================================================== */
+
+                const contributionCanvas =
+                    document.getElementById(
+                        "regionalContributionChart"
+                    );
+
+
+                if (
+                    contributionCanvas &&
+                    salesContributionData.length
+                ) {
+
+                    new Chart(
+                        contributionCanvas,
+                        {
+
+                            type: "doughnut",
+
+                            data: {
+
+                                labels:
+                                    salesContributionData.map(
+                                        item =>
+                                            item.region
+                                    ),
+
+                                datasets: [
+
+                                    {
+
+                                        data:
+                                            salesContributionData.map(
+                                                item =>
+                                                    item.percentage
+                                            ),
+
+                                        backgroundColor: [
+
+                                            "#4f8cff",
+                                            "#8b7cff",
+                                            "#28d7a3",
+                                            "#ff9f5a",
+                                            "#38bdf8",
+                                            "#ff647c",
+                                            "#667eea",
+                                            "#f5c451",
+                                            "#a78bfa",
+                                            "#14b8a6"
+
+                                        ],
+
+                                        borderColor:
+                                            "#0d1c2d",
+
+                                        borderWidth: 3,
+
+                                        hoverOffset: 8
+                                    }
+
+                                ]
+
+                            },
+
+                            options: {
+
+                                responsive: true,
+
+                                maintainAspectRatio: false,
+
+                                cutout: "62%",
+
+                                plugins: {
+
+                                    legend: {
+
+                                        position: "bottom",
+
+                                        labels: {
+
+                                            usePointStyle:
+                                                true,
+
+                                            padding: 14,
+
+                                            color:
+                                                "#8da3b8",
+
+                                            font: {
+                                                size: 10
+                                            }
+                                        }
+                                    },
+
+                                    tooltip: {
+
+                                        ...tooltipOptions,
+
+                                        callbacks: {
+
+                                            label:
+                                                function (
+                                                    context
+                                                ) {
+
+                                                    return (
+                                                        " " +
+                                                        context.label +
+                                                        ": " +
+                                                        Number(
+                                                            context.raw
+                                                        ).toFixed(1) +
+                                                        "%"
+                                                    );
+                                                }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    );
+                }
+
+
+                /* =================================================
+                   6. PERFORMANCE COMPARISON
+                ================================================== */
+
+                const performanceCanvas =
+                    document.getElementById(
+                        "regionalPerformanceChart"
+                    );
+
+
+                if (
+                    performanceCanvas &&
+                    performanceComparisonData.length
+                ) {
+
+                    new Chart(
+                        performanceCanvas,
+                        {
+
+                            type: "bar",
+
+                            data: {
+
+                                labels:
+                                    performanceComparisonData.map(
+                                        item =>
+                                            item.region
+                                    ),
+
+                                datasets: [
+
+                                    {
+
+                                        label:
+                                            "Sales",
+
+                                        data:
+                                            performanceComparisonData.map(
+                                                item =>
+                                                    item.sales
+                                            ),
+
+                                        backgroundColor:
+                                            "rgba(79,140,255,.82)",
+
+                                        borderColor:
+                                            "#4f8cff",
+
+                                        borderWidth: 1,
+
+                                        borderRadius: 6
+                                    },
+
+                                    {
+
+                                        label:
+                                            "Units",
+
+                                        data:
+                                            performanceComparisonData.map(
+                                                item =>
+                                                    item.units
+                                            ),
+
+                                        backgroundColor:
+                                            "rgba(40,215,163,.82)",
+
+                                        borderColor:
+                                            "#28d7a3",
+
+                                        borderWidth: 1,
+
+                                        borderRadius: 6
+                                    },
+
+                                    {
+
+                                        label:
+                                            "Profit",
+
+                                        data:
+                                            performanceComparisonData.map(
+                                                item =>
+                                                    item.profit
+                                            ),
+
+                                        backgroundColor:
+                                            "rgba(139,124,255,.82)",
+
+                                        borderColor:
+                                            "#8b7cff",
+
+                                        borderWidth: 1,
+
+                                        borderRadius: 6
+                                    }
+
+                                ]
+
+                            },
+
+                            options: {
+
+                                responsive: true,
+
+                                maintainAspectRatio: false,
+
+                                interaction: {
+
+                                    mode: "index",
+
+                                    intersect: false
+                                },
+
+                                plugins: {
+
+                                    legend: {
+
+                                        position: "bottom",
+
+                                        labels: {
+
+                                            usePointStyle:
+                                                true,
+
+                                            padding: 15,
+
+                                            color:
+                                                "#8da3b8"
+                                        }
+                                    },
+
+                                    tooltip:
+                                        tooltipOptions
+                                },
+
+                                scales: {
+
+                                    x: {
+
+                                        grid: {
+                                            display: false
+                                        },
+
+                                        ticks: {
+                                            color:
+                                                "#8da3b8"
+                                        }
+                                    },
+
+                                    y: {
+
+                                        beginAtZero: true,
+
+                                        grid: {
+                                            color:
+                                                gridColor
+                                        },
+
+                                        ticks: {
+                                            color:
+                                                "#8da3b8"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    );
+                }
+
+
+                /* =================================================
+                   7. REGIONAL SALES COMPARISON TREND
+                ================================================== */
+
+                const regionalComparisonCanvas =
+                    document.getElementById(
+                        "regionalSalesComparisonChart"
+                    );
+
+
+                if (
+                    regionalComparisonCanvas &&
+                    salesByDateData.length
+                ) {
+
+                    const regionNames = [
+                        ...new Set(
+                            salesByDateData.map(
+                                item =>
+                                    item.region
+                            )
+                        )
+                    ];
+
+
+                    const dates = [
+                        ...new Set(
+                            salesByDateData.map(
+                                item =>
+                                    item.date
+                            )
+                        )
+                    ];
+
+
+                    const regionColors = [
+
+                        "#4f8cff",
+                        "#8b7cff",
+                        "#28d7a3",
+                        "#ff9f5a",
+                        "#38bdf8",
+                        "#ff647c",
+                        "#f5c451",
+                        "#a78bfa"
+
+                    ];
+
+
+                    const datasets =
+                        regionNames.map(
+                            function (
+                                region,
+                                regionIndex
+                            ) {
+
+                                return {
+
+                                    label:
+                                        region,
+
+                                    data:
+                                        dates.map(
+                                            function (
+                                                date
+                                            ) {
+
+                                                const record =
+                                                    salesByDateData.find(
+                                                        item =>
+
+                                                            item.date ===
+                                                            date &&
+
+                                                            item.region ===
+                                                            region
+                                                    );
+
+                                                return record
+                                                    ? record.sales
+                                                    : null;
+                                            }
+                                        ),
+
+                                    borderColor:
+                                        regionColors[
+                                            regionIndex %
+                                            regionColors.length
+                                        ],
+
+                                    backgroundColor:
+                                        "transparent",
+
+                                    tension:
+                                        .35,
+
+                                    borderWidth:
+                                        2.5,
+
+                                    pointRadius:
+                                        2.5,
+
+                                    pointHoverRadius:
+                                        5,
+
+                                    spanGaps:
+                                        true
+                                };
+                            }
+                        );
+
+
+                    new Chart(
+                        regionalComparisonCanvas,
+                        {
+
+                            type: "line",
+
+                            data: {
+
+                                labels:
+                                    dates,
+
+                                datasets:
+                                    datasets
+                            },
+
+                            options: {
+
+                                responsive: true,
+
+                                maintainAspectRatio: false,
+
+                                interaction: {
+
+                                    mode:
+                                        "index",
+
+                                    intersect:
+                                        false
+                                },
+
+                                plugins: {
+
+                                    legend: {
+
+                                        position:
+                                            "bottom",
+
+                                        labels: {
+
+                                            usePointStyle:
+                                                true,
+
+                                            padding:
+                                                15,
+
+                                            color:
+                                                "#8da3b8"
+                                        }
+                                    },
+
+                                    tooltip:
+                                        tooltipOptions
+                                },
+
+                                scales: {
+
+                                    x: {
+
+                                        grid: {
+                                            display:
+                                                false
+                                        },
+
+                                        ticks: {
+
+                                            color:
+                                                "#667e94",
+
+                                            maxRotation:
+                                                45
+                                        }
+                                    },
+
+                                    y: {
+
+                                        beginAtZero:
+                                            true,
+
+                                        grid: {
+
+                                            color:
+                                                gridColor
+                                        },
+
+                                        ticks: {
+
+                                            color:
+                                                "#8da3b8"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    );
+                }
+
+
+                /* =================================================
+                   DATE RANGE UI
+                ================================================== */
+
+                const rangeSelect =
+                    document.getElementById(
+                        "regionalRange"
+                    );
+
+
+                const customDateRow =
+                    document.getElementById(
+                        "customDateRow"
+                    );
+
+
+                if (
+                    rangeSelect &&
+                    customDateRow
+                ) {
+
+                    function updateCustomDates() {
+
+                        if (
+                            rangeSelect.value ===
+                            "custom"
+                        ) {
+
+                            customDateRow.classList.add(
+                                "active"
+                            );
+
+                        } else {
+
+                            customDateRow.classList.remove(
+                                "active"
+                            );
+                        }
+                    }
+
+
+                    rangeSelect.addEventListener(
+                        "change",
+                        updateCustomDates
+                    );
+
+
+                    updateCustomDates();
+                }
+
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>

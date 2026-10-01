@@ -1,0 +1,509 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+Export Center
+{% endblock %}
+
+{% block content %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'reporting/css/reporting.css' %}"
+>
+
+<div class="reporting-page">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="reporting-header">
+
+        <div>
+            <h1>Export Center</h1>
+
+            <p>
+                Export completed reports as PDF or Excel files.
+            </p>
+        </div>
+
+        <div class="reporting-header-actions">
+
+            <a
+                href="{% url 'reporting:dashboard' %}"
+                class="reporting-btn reporting-btn-secondary"
+            >
+                ← Dashboard
+            </a>
+
+            <a
+                href="{% url 'reporting:export_history' %}"
+                class="reporting-btn reporting-btn-secondary"
+            >
+                Export History
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         REPORT SELECTION
+    ====================================================== -->
+
+    <section class="reporting-card">
+
+        <div class="reporting-card-header">
+
+            <div>
+                <h2>Select Report</h2>
+
+                <p>
+                    Select a completed report before exporting.
+                </p>
+            </div>
+
+        </div>
+
+
+        <form
+            method="get"
+            class="reporting-form"
+        >
+
+            <div class="reporting-form-group">
+
+                <label for="report">
+                    Report
+                </label>
+
+                <select
+                    name="report"
+                    id="report"
+                    class="reporting-select"
+                    onchange="this.form.submit()"
+                >
+
+                    <option value="">
+                        Select a report
+                    </option>
+
+                    {% for report in reports %}
+
+                    <option
+                        value="{{ report.id }}"
+                        {% if selected_report and selected_report.id == report.id %}
+                            selected
+                        {% endif %}
+                    >
+
+                        {{ report.name }}
+                        — {{ report.dataset.name }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+        </form>
+
+    </section>
+
+
+    {% if selected_report %}
+
+    <!-- =====================================================
+         SELECTED REPORT
+    ====================================================== -->
+
+    <section class="reporting-card">
+
+        <div class="reporting-card-header">
+
+            <div>
+
+                <h2>
+                    {{ selected_report.name }}
+                </h2>
+
+                <p>
+                    {{ selected_report.description|default:"No description provided." }}
+                </p>
+
+            </div>
+
+            <span
+                class="
+                    reporting-status
+                    reporting-status-{{ selected_report.status|lower }}
+                "
+            >
+                {{ selected_report.status }}
+            </span>
+
+        </div>
+
+
+        <!-- =================================================
+             REPORT INFORMATION
+        ================================================== -->
+
+        <div class="reporting-summary-grid">
+
+            <div class="reporting-summary-item">
+
+                <span>
+                    Dataset
+                </span>
+
+                <strong>
+                    {{ selected_report.dataset.name }}
+                </strong>
+
+            </div>
+
+
+            <div class="reporting-summary-item">
+
+                <span>
+                    Dataset Type
+                </span>
+
+                <strong>
+                    {{ selected_report.dataset.dataset_type }}
+                </strong>
+
+            </div>
+
+
+            <div class="reporting-summary-item">
+
+                <span>
+                    Dataset Version
+                </span>
+
+                <strong>
+                    v{{ selected_report.dataset_version.version_number }}
+                </strong>
+
+            </div>
+
+
+            <div class="reporting-summary-item">
+
+                <span>
+                    Report Type
+                </span>
+
+                <strong>
+                    {{ selected_report.report_type }}
+                </strong>
+
+            </div>
+
+
+            <div class="reporting-summary-item">
+
+                <span>
+                    Created
+                </span>
+
+                <strong>
+                    {{ selected_report.created_at|date:"d M Y, H:i" }}
+                </strong>
+
+            </div>
+
+
+            <div class="reporting-summary-item">
+
+                <span>
+                    Completed
+                </span>
+
+                <strong>
+
+                    {% if selected_report.completed_at %}
+
+                        {{ selected_report.completed_at|date:"d M Y, H:i" }}
+
+                    {% else %}
+
+                        —
+
+                    {% endif %}
+
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             EXPORT ACTIONS
+        ================================================== -->
+
+        <div class="reporting-export-actions">
+
+            {% if selected_report.status == "Completed" %}
+
+                <a
+                    href="{% url 'reporting:export_pdf' selected_report.id %}"
+                    class="reporting-export-option"
+                >
+
+                    <div class="reporting-export-option-icon">
+                        PDF
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Export PDF
+                        </strong>
+
+                        <span>
+                            Generate a PDF version of this report.
+                        </span>
+
+                    </div>
+
+                </a>
+
+
+                <a
+                    href="{% url 'reporting:export_excel' selected_report.id %}"
+                    class="reporting-export-option"
+                >
+
+                    <div class="reporting-export-option-icon">
+                        XLSX
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Export Excel
+                        </strong>
+
+                        <span>
+                            Generate an Excel version of this report.
+                        </span>
+
+                    </div>
+
+                </a>
+
+            {% else %}
+
+                <div class="reporting-export-disabled">
+
+                    <strong>
+                        Report is not ready for export
+                    </strong>
+
+                    <span>
+                        Only completed reports can currently
+                        be exported.
+                    </span>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         PREVIOUS EXPORTS
+    ====================================================== -->
+
+    <section class="reporting-card">
+
+        <div class="reporting-card-header">
+
+            <div>
+
+                <h2>
+                    Previous Exports
+                </h2>
+
+                <p>
+                    Export files previously generated for this report.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {% with exports=selected_report.exports.all %}
+
+            {% if exports %}
+
+                <div class="reporting-table-wrapper">
+
+                    <table class="reporting-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Format
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th>
+                                    Created
+                                </th>
+
+                                <th>
+                                    Completed
+                                </th>
+
+                                <th>
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for export in exports %}
+
+                            <tr>
+
+                                <td>
+                                    {{ export.export_type }}
+                                </td>
+
+                                <td>
+
+                                    <span
+                                        class="
+                                            reporting-status
+                                            reporting-status-{{ export.status|lower }}
+                                        "
+                                    >
+                                        {{ export.status }}
+                                    </span>
+
+                                </td>
+
+                                <td>
+                                    {{ export.created_at|date:"d M Y, H:i" }}
+                                </td>
+
+                                <td>
+
+                                    {% if export.completed_at %}
+
+                                        {{ export.completed_at|date:"d M Y, H:i" }}
+
+                                    {% else %}
+
+                                        —
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td>
+
+                                    {% if export.status == "Completed" and export.file %}
+
+                                        <a
+                                            href="{{ export.file.url }}"
+                                            download
+                                            class="reporting-action-link"
+                                        >
+                                            Download
+                                        </a>
+
+                                    {% else %}
+
+                                        <span class="reporting-muted">
+                                            —
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="reporting-history-empty">
+
+                    <h3>
+                        No Previous Exports
+                    </h3>
+
+                    <p>
+                        PDF and Excel exports generated for this
+                        report will appear here.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+        {% endwith %}
+
+    </section>
+
+    {% else %}
+
+    <!-- =====================================================
+         NO REPORT SELECTED
+    ====================================================== -->
+
+    <section class="reporting-card">
+
+        <div class="reporting-history-empty">
+
+            <div class="reporting-empty-icon">
+                📄
+            </div>
+
+            <h3>
+                Select a Report
+            </h3>
+
+            <p>
+                Choose a completed report above to begin
+                exporting.
+            </p>
+
+        </div>
+
+    </section>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

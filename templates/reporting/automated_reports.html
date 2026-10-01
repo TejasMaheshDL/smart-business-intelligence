@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+Automated Reports
+{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'reporting/css/reporting.css' %}">
+
+<div class="reporting-page">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="reporting-header">
+
+        <div>
+            <h1>Automated Reports</h1>
+
+            <p>
+                Generate a standardized business report from
+                your selected dataset and dataset version.
+            </p>
+        </div>
+
+        <div class="reporting-header-actions">
+
+            <a
+                href="{% url 'reporting:dashboard' %}"
+                class="reporting-btn reporting-btn-secondary"
+            >
+                ← Reporting Dashboard
+            </a>
+
+            <a
+                href="{% url 'reporting:report_history' %}"
+                class="reporting-btn reporting-btn-secondary"
+            >
+                Report History
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         FORM
+    ====================================================== -->
+
+    <section class="reporting-card">
+
+        <div class="reporting-card-header">
+
+            <div>
+                <h2>Generate Automated Report</h2>
+
+                <p>
+                    Choose the data source and provide the report
+                    information.
+                </p>
+            </div>
+
+        </div>
+
+
+        {% if form.non_field_errors %}
+
+            <div class="reporting-form-errors">
+
+                {% for error in form.non_field_errors %}
+
+                    <div>
+                        {{ error }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+
+        <form method="post">
+
+            {% csrf_token %}
+
+
+            <!-- =================================================
+                 DATASET
+            ================================================== -->
+
+            <div class="reporting-form-section">
+
+                <div class="reporting-form-section-title">
+                    Data Source
+                </div>
+
+
+                <div class="reporting-dataset-form">
+
+                    <div class="reporting-form-group">
+
+                        <label for="{{ form.dataset.id_for_label }}">
+                            Dataset
+                        </label>
+
+                        {{ form.dataset }}
+
+                        {% if form.dataset.errors %}
+
+                            <div class="reporting-field-error">
+
+                                {% for error in form.dataset.errors %}
+                                    {{ error }}
+                                {% endfor %}
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="reporting-form-group">
+
+                        <label for="{{ form.version.id_for_label }}">
+                            Dataset Version
+                        </label>
+
+                        {{ form.version }}
+
+                        {% if form.version.errors %}
+
+                            <div class="reporting-field-error">
+
+                                {% for error in form.version.errors %}
+                                    {{ error }}
+                                {% endfor %}
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 REPORT INFORMATION
+            ================================================== -->
+
+            <div class="reporting-form-section">
+
+                <div class="reporting-form-section-title">
+                    Report Information
+                </div>
+
+
+                <div class="reporting-form-full">
+
+                    <div class="reporting-form-group">
+
+                        <label for="{{ form.report_name.id_for_label }}">
+                            Report Name
+                        </label>
+
+                        {{ form.report_name }}
+
+                        {% if form.report_name.errors %}
+
+                            <div class="reporting-field-error">
+
+                                {% for error in form.report_name.errors %}
+                                    {{ error }}
+
+                                {% endfor %}
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="reporting-form-group">
+
+                        <label for="{{ form.report_description.id_for_label }}">
+                            Description
+                        </label>
+
+                        {{ form.report_description }}
+
+                        {% if form.report_description.errors %}
+
+                            <div class="reporting-field-error">
+
+                                {% for error in form.report_description.errors %}
+                                    {{ error }}
+
+                                {% endfor %}
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 SELECTED DATASET PREVIEW
+            ================================================== -->
+
+            {% if selected_dataset %}
+
+            <div class="reporting-preview-box">
+
+                <div class="reporting-preview-title">
+                    Selected Data Source
+                </div>
+
+                <div class="reporting-preview-grid">
+
+                    <div>
+                        <span>Dataset</span>
+                        <strong>
+                            {{ selected_dataset.name }}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Type</span>
+                        <strong>
+                            {{ selected_dataset.dataset_type }}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Version</span>
+                        <strong>
+
+                            {% if selected_version %}
+                                v{{ selected_version.version_number }}
+                            {% else %}
+                                Current Version
+                            {% endif %}
+
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Version Type</span>
+                        <strong>
+
+                            {% if selected_version %}
+                                {{ selected_version.version_type }}
+                            {% else %}
+                                —
+                            {% endif %}
+
+                        </strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- =================================================
+                 ACTIONS
+            ================================================== -->
+
+            <div class="reporting-form-actions">
+
+                <a
+                    href="{% url 'reporting:dashboard' %}"
+                    class="reporting-btn reporting-btn-secondary"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="reporting-btn reporting-btn-primary"
+                >
+                    Generate Automated Report
+                </button>
+
+            </div>
+
+        </form>
+
+    </section>
+
+</div>
+
+{% endblock %}

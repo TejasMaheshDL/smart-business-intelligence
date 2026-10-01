@@ -1,0 +1,945 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Alerts | Smart Business Intelligence</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-base: #040911;
+            --bg-surface: #07111f;
+            --bg-card: rgba(11, 23, 42, 0.72);
+            --bg-card-hover: rgba(16, 32, 59, 0.85);
+
+            /* Deep Dark KPI Surfaces */
+            --bg-kpi-card: #050d18;
+            --border-kpi: rgba(255, 255, 255, 0.06);
+
+            --border-subtle: rgba(79, 163, 255, 0.14);
+            --border-focus: rgba(79, 163, 255, 0.45);
+            
+            --accent-blue: #4fa3ff;
+            --accent-cyan: #22d3ee;
+            --accent-purple: #8b5cf6;
+            --accent-gradient: linear-gradient(135deg, #4fa3ff 0%, #22d3ee 100%);
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: rgba(190, 211, 235, 0.65);
+            
+            --status-green: #10b981;
+            --status-yellow: #f59e0b;
+            --status-red: #ff5263;
+
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(79, 163, 255, 0.12), transparent),
+                radial-gradient(circle 600px at 0% 100%, rgba(34, 211, 238, 0.04), transparent);
+            background-attachment: fixed;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Glow & Entrance Animations */
+        @keyframes subtlePulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.08); }
+        }
+
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-up {
+            animation: cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Layout Structure */
+        .page-shell {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .sidebar-shell {
+            width: 270px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 1000;
+            padding: 1.75rem 1.25rem;
+        }
+
+        .main-shell {
+            margin-left: 270px;
+            flex: 1;
+            width: calc(100% - 270px);
+            min-height: 100vh;
+            padding: 2.5rem 3.5rem;
+            overflow-y: auto;
+        }
+
+        .business-alerts-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 2rem;
+            gap: 24px;
+        }
+
+        .header-content {
+            max-width: 750px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--accent-cyan);
+            margin-bottom: 0.65rem;
+            text-transform: uppercase;
+        }
+
+        .eyebrow-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan);
+            animation: subtlePulse 2.5s infinite;
+        }
+
+        .page-title {
+            font-size: 2.15rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+            margin-bottom: 0.4rem;
+        }
+
+        .page-description {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .header-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: #6ee7b7;
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--status-green);
+            box-shadow: 0 0 10px var(--status-green);
+        }
+
+        /* Messages */
+        .messages {
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            background: rgba(79, 163, 255, 0.08);
+            border: 1px solid var(--border-subtle);
+            color: #dbeafe;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            position: relative;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            padding: 1.75rem;
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: minmax(240px, 1.2fr) minmax(220px, 0.8fr) auto;
+            align-items: flex-end;
+            gap: 16px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .control-panel:hover {
+            border-color: var(--border-focus);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+        }
+
+        .control-group {
+            min-width: 0;
+        }
+
+        .control-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .control-select {
+            width: 100%;
+            height: 44px;
+            padding: 0 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-subtle);
+            background-color: var(--bg-surface);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234fa3ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            transition: all 0.2s ease;
+        }
+
+        .control-select:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(79, 163, 255, 0.15);
+        }
+
+        .control-select option {
+            background: #07111f;
+            color: #f8fafc;
+        }
+
+        .generate-form {
+            margin: 0;
+        }
+
+        .generate-button {
+            height: 44px;
+            padding: 0 24px;
+            border: none;
+            border-radius: var(--radius-md);
+            background: var(--accent-gradient);
+            color: #040911;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            box-shadow: 0 4px 18px rgba(34, 211, 238, 0.25);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+        }
+
+        .generate-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(79, 163, 255, 0.35);
+        }
+
+        .generate-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Dataset Info Strip */
+        .dataset-strip {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .dataset-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 14px;
+            border: 1px solid var(--border-subtle);
+            border-radius: 999px;
+            background: rgba(7, 17, 31, 0.6);
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .dataset-pill strong {
+            color: #ffffff;
+        }
+
+        .dataset-pill-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+        }
+
+        /* DARK THEME KPI SUMMARY CARDS */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background-color: var(--bg-kpi-card);
+            border: 1px solid var(--border-kpi);
+            border-radius: var(--radius-md);
+            padding: 1.4rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(79, 163, 255, 0.3);
+        }
+
+        .summary-label {
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .summary-value {
+            margin-top: 0.6rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+        }
+
+        .summary-subtitle {
+            margin-top: 0.45rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .summary-card.critical .summary-value { color: var(--status-red); }
+        .summary-card.high .summary-value { color: #ff8b99; }
+        .summary-card.medium .summary-value { color: var(--status-yellow); }
+        .summary-card.low .summary-value { color: var(--accent-cyan); }
+        .summary-card.resolved .summary-value { color: var(--status-green); }
+
+        /* Section Header */
+        .section-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 15px;
+            margin: 2rem 0 1rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .section-description {
+            margin-top: 4px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .alert-count {
+            padding: 4px 12px;
+            border: 1px solid var(--border-subtle);
+            border-radius: 999px;
+            background: rgba(7, 17, 31, 0.6);
+            color: var(--accent-cyan);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        /* Alert Cards List */
+        .alerts-list {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .alert-card {
+            background-color: var(--bg-kpi-card);
+            border: 1px solid var(--border-kpi);
+            border-radius: var(--radius-md);
+            padding: 1.4rem;
+            position: relative;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 5px minmax(0, 1fr) auto;
+            gap: 18px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .alert-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(79, 163, 255, 0.3);
+        }
+
+        .severity-bar {
+            width: 5px;
+            min-height: 100%;
+            border-radius: 999px;
+            background: var(--accent-blue);
+        }
+
+        .alert-card.severity-critical .severity-bar { background: var(--status-red); box-shadow: 0 0 10px var(--status-red); }
+        .alert-card.severity-high .severity-bar { background: #ff8b99; }
+        .alert-card.severity-medium .severity-bar { background: var(--status-yellow); }
+        .alert-card.severity-low .severity-bar { background: var(--accent-blue); }
+        .alert-card.severity-info .severity-bar { background: var(--accent-cyan); }
+
+        .alert-main {
+            min-width: 0;
+        }
+
+        .alert-topline {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0.6rem;
+        }
+
+        .severity-badge,
+        .category-badge,
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        .severity-badge {
+            background: rgba(79, 163, 255, 0.1);
+            color: var(--accent-blue);
+            border: 1px solid rgba(79, 163, 255, 0.25);
+        }
+
+        .severity-critical .severity-badge {
+            background: rgba(255, 82, 99, 0.15);
+            color: var(--status-red);
+            border-color: rgba(255, 82, 99, 0.35);
+        }
+
+        .severity-high .severity-badge {
+            background: rgba(255, 139, 152, 0.12);
+            color: #ff9ca8;
+            border-color: rgba(255, 139, 152, 0.3);
+        }
+
+        .severity-medium .severity-badge {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--status-yellow);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .category-badge {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-dim);
+        }
+
+        .status-badge {
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            background: rgba(16, 185, 129, 0.08);
+            color: #6ee7b7;
+        }
+
+        .alert-title {
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .alert-description {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-top: 0.5rem;
+        }
+
+        .alert-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 1rem;
+        }
+
+        .meta-item {
+            padding: 6px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 6px;
+            background: rgba(7, 17, 31, 0.6);
+            color: var(--text-dim);
+            font-size: 0.75rem;
+        }
+
+        .meta-item strong {
+            color: #ffffff;
+            margin-left: 3px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .recommended-action {
+            margin-top: 1rem;
+            padding: 10px 14px;
+            border-left: 2px solid var(--accent-blue);
+            background: rgba(79, 163, 255, 0.04);
+            color: #dbeafe;
+            font-size: 0.85rem;
+            line-height: 1.55;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .recommended-action strong {
+            color: var(--accent-cyan);
+            margin-right: 4px;
+        }
+
+        .alert-date {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            text-align: right;
+            line-height: 1.5;
+        }
+
+        /* Methodology */
+        .methodology {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            background: var(--bg-card);
+        }
+
+        .methodology-title {
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .methodology-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 4rem 2rem;
+            text-align: center;
+            border: 1px dashed var(--border-subtle);
+            border-radius: var(--radius-lg);
+            background: rgba(7, 17, 31, 0.45);
+            margin-bottom: 2rem;
+        }
+
+        .empty-icon {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: var(--status-green);
+            font-size: 1.5rem;
+        }
+
+        .empty-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.4rem;
+        }
+
+        .empty-description {
+            max-width: 540px;
+            margin: 0 auto;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .no-dataset {
+            padding: 4rem 2rem;
+            text-align: center;
+            border: 1px dashed var(--border-subtle);
+            border-radius: var(--radius-lg);
+            background: var(--bg-card);
+        }
+
+        .no-dataset h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .no-dataset p {
+            max-width: 500px;
+            margin: 0 auto;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 1250px) {
+            .control-panel { grid-template-columns: 1fr 1fr; }
+            .generate-form { grid-column: 1 / -1; }
+            .generate-button { width: 100%; }
+        }
+
+        @media (max-width: 900px) {
+            .sidebar-shell { position: relative; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-subtle); }
+            .main-shell { margin-left: 0; width: 100%; padding: 1.5rem; }
+            .page-header { flex-direction: column; }
+            .alert-card { grid-template-columns: 4px minmax(0, 1fr); }
+            .alert-date { grid-column: 2; text-align: left; margin-top: 0.5rem; }
+        }
+
+        @media (max-width: 620px) {
+            .control-panel { grid-template-columns: 1fr; }
+            .generate-form { grid-column: auto; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="page-shell">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar-shell">
+        {% include "includes/smart_sidebar.html" %}
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-shell">
+        <div class="business-alerts-container">
+
+            <!-- HEADER -->
+            <header class="page-header fade-up">
+                <div class="header-content">
+                    <div class="eyebrow">
+                        <span class="eyebrow-dot"></span>
+                        Decision Intelligence
+                    </div>
+                    <h1 class="page-title">Business Alerts</h1>
+                    <p class="page-description">Detect important business conditions automatically from your selected cleaned dataset. Highlights financial, sales, customer, operational, and margin indicators requiring attention.</p>
+                </div>
+
+                <div class="header-status">
+                    <span class="status-dot"></span>
+                    Alert Detection Ready
+                </div>
+            </header>
+
+            <!-- MESSAGES -->
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="message">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if selected_dataset %}
+
+                <!-- DATASET CONTROLS -->
+                <section class="control-panel fade-up">
+                    <div class="control-group">
+                        <label class="control-label" for="dataset-selector">Select Dataset</label>
+                        <select id="dataset-selector" class="control-select">
+                            {% for dataset in datasets %}
+                                <option value="{{ dataset.id }}" {% if selected_dataset.id == dataset.id %}selected{% endif %}>
+                                    {{ dataset.name }} — {{ dataset.dataset_type }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label" for="version-selector">Dataset Version</label>
+                        <select id="version-selector" class="control-select">
+                            {% for version in versions %}
+                                <option value="{{ version.id }}" {% if selected_version.id == version.id %}selected{% endif %}>
+                                    Version {{ version.version_number }} — {{ version.version_type }}
+                                    {% if version.is_current %}— Current{% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <form method="post" class="generate-form" id="generate-alert-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="generate">
+                        <input type="hidden" name="dataset_id" value="{{ selected_dataset.id }}">
+                        <input type="hidden" name="version_id" value="{{ selected_version.id }}">
+
+                        <button type="submit" class="generate-button" id="generate-alert-button">
+                            Detect Business Alerts
+                        </button>
+                    </form>
+                </section>
+
+                <!-- DATASET INFO STRIP -->
+                <div class="dataset-strip fade-up">
+                    <div class="dataset-pill">
+                        <span class="dataset-pill-dot"></span>
+                        Dataset: <strong>{{ selected_dataset.name }}</strong>
+                    </div>
+                    <div class="dataset-pill">
+                        Version: <strong>{{ selected_version.version_number }}</strong>
+                    </div>
+                    <div class="dataset-pill">
+                        Type: <strong>{{ selected_dataset.dataset_type }}</strong>
+                    </div>
+                    <div class="dataset-pill">
+                        Rows: <strong>{{ selected_version.total_rows }}</strong>
+                    </div>
+                    <div class="dataset-pill">
+                        Quality: <strong>{{ selected_version.quality_score|floatformat:1 }}%</strong>
+                    </div>
+                </div>
+
+                <!-- DARK THEME KPI SUMMARY CARDS -->
+                <section class="summary-grid fade-up">
+                    <div class="summary-card">
+                        <div class="summary-label">Total Alerts</div>
+                        <div class="summary-value">{{ alert_summary.total }}</div>
+                        <div class="summary-subtitle">Detected for this version</div>
+                    </div>
+
+                    <div class="summary-card critical">
+                        <div class="summary-label">Critical</div>
+                        <div class="summary-value">{{ alert_summary.critical }}</div>
+                        <div class="summary-subtitle">Immediate attention</div>
+                    </div>
+
+                    <div class="summary-card high">
+                        <div class="summary-label">High</div>
+                        <div class="summary-value">{{ alert_summary.high }}</div>
+                        <div class="summary-subtitle">Important conditions</div>
+                    </div>
+
+                    <div class="summary-card medium">
+                        <div class="summary-label">Medium</div>
+                        <div class="summary-value">{{ alert_summary.medium }}</div>
+                        <div class="summary-subtitle">Monitor closely</div>
+                    </div>
+
+                    <div class="summary-card low">
+                        <div class="summary-label">New</div>
+                        <div class="summary-value">{{ alert_summary.new }}</div>
+                        <div class="summary-subtitle">Awaiting review</div>
+                    </div>
+
+                    <div class="summary-card resolved">
+                        <div class="summary-label">Resolved</div>
+                        <div class="summary-value">{{ alert_summary.resolved }}</div>
+                        <div class="summary-subtitle">Completed alerts</div>
+                    </div>
+                </section>
+
+                <!-- ALERTS LIST -->
+                {% if has_alerts %}
+                    <section class="fade-up">
+                        <div class="section-header">
+                            <div>
+                                <h2 class="section-title">Detected Business Conditions</h2>
+                                <p class="section-description">Conditions identified from the selected dataset version.</p>
+                            </div>
+                            <div class="alert-count">
+                                {{ alert_summary.total }} alert{{ alert_summary.total|pluralize }}
+                            </div>
+                        </div>
+
+                        <div class="alerts-list">
+                            {% for alert in alerts %}
+                                <article class="alert-card severity-{{ alert.severity|lower }}">
+                                    <div class="severity-bar"></div>
+
+                                    <div class="alert-main">
+                                        <div class="alert-topline">
+                                            <span class="severity-badge">{{ alert.severity }}</span>
+                                            <span class="category-badge">{{ alert.category }}</span>
+                                            <span class="status-badge">{{ alert.status }}</span>
+                                        </div>
+
+                                        <h3 class="alert-title">{{ alert.title }}</h3>
+                                        <p class="alert-description">{{ alert.description }}</p>
+
+                                        <div class="alert-meta">
+                                            <div class="meta-item">
+                                                Metric: <strong>{{ alert.metric_name|default:"—" }}</strong>
+                                            </div>
+                                            <div class="meta-item">
+                                                Value: <strong>{{ alert.metric_value|floatformat:2 }}</strong>
+                                            </div>
+                                            <div class="meta-item">
+                                                Threshold: <strong>{{ alert.threshold_value|floatformat:2 }}</strong>
+                                            </div>
+                                            <div class="meta-item">
+                                                Trigger: <strong>{{ alert.trigger_type }}</strong>
+                                            </div>
+                                        </div>
+
+                                        {% if alert.recommended_action %}
+                                            <div class="recommended-action">
+                                                <strong>Recommended Action:</strong>
+                                                {{ alert.recommended_action }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="alert-date">
+                                        {{ alert.detected_at|date:"d M Y" }}<br>
+                                        {{ alert.detected_at|date:"H:i" }}
+                                    </div>
+                                </article>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                {% else %}
+                    <section class="empty-state fade-up">
+                        <div class="empty-icon">✓</div>
+                        <h2 class="empty-title">No Business Alerts Detected</h2>
+                        <p class="empty-description">No alert conditions have been detected for this dataset version. Re-run detection after updating or selecting another version to reassess business conditions.</p>
+                    </section>
+                {% endif %}
+
+                <!-- METHODOLOGY -->
+                <section class="methodology fade-up">
+                    <h3 class="methodology-title">How Business Alerts Work</h3>
+                    <p class="methodology-text">Business Alerts evaluate predefined operational criteria including profitability ratios, cost-to-sales parameters, return frequency, marketing yield, and dataset health signals. Detected conditions stay strictly mapped to the analyzed dataset version.</p>
+                </section>
+
+            {% else %}
+                <!-- NO DATASET -->
+                <section class="no-dataset fade-up">
+                    <h2>No Active Dataset Available</h2>
+                    <p>Upload and process a dataset through Data Management before using Business Alerts. Alerts will inspect the cleaned data version rather than raw files.</p>
+                </section>
+            {% endif %}
+
+        </div>
+    </main>
+
+</div>
+
+<script>
+    const datasetSelector = document.getElementById("dataset-selector");
+    const versionSelector = document.getElementById("version-selector");
+
+    if (datasetSelector) {
+        datasetSelector.addEventListener("change", function () {
+            const datasetId = this.value;
+            if (!datasetId) return;
+
+            window.location.href = "{% url 'decision_intelligence:business_alerts' %}"
+                + "?dataset=" + encodeURIComponent(datasetId);
+        });
+    }
+
+    if (versionSelector) {
+        versionSelector.addEventListener("change", function () {
+            const datasetId = datasetSelector ? datasetSelector.value : "";
+            const versionId = this.value;
+            if (!datasetId || !versionId) return;
+
+            window.location.href = "{% url 'decision_intelligence:business_alerts' %}"
+                + "?dataset=" + encodeURIComponent(datasetId)
+                + "&version=" + encodeURIComponent(versionId);
+        });
+    }
+
+    const generateForm = document.getElementById("generate-alert-form");
+    const generateButton = document.getElementById("generate-alert-button");
+
+    if (generateForm && generateButton) {
+        generateForm.addEventListener("submit", function () {
+            generateButton.disabled = true;
+            generateButton.textContent = "Detecting Alerts...";
+        });
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,3853 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Customer Intelligence</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/smart_sidebar.css' %}"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+
+        /* =========================================================
+           GLOBAL
+           ========================================================= */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+
+            overflow: hidden;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            background: #07111f;
+
+            color: #e8eef7;
+        }
+
+        body {
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+
+
+        /* =========================================================
+           PAGE LAYOUT
+           ========================================================= */
+
+        .customer-page {
+            display: flex;
+
+            width: 100%;
+            height: 100vh;
+
+            overflow: hidden;
+        }
+
+        .sidebar-wrapper {
+            flex: 0 0 280px;
+
+            width: 280px;
+            height: 100vh;
+
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            background: #07111f;
+        }
+
+        .customer-content-area {
+            flex: 1 1 auto;
+
+            width: calc(100% - 280px);
+            height: 100vh;
+
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            padding: 26px 28px 40px;
+
+            scrollbar-width: thin;
+            scrollbar-color: #263d59 transparent;
+        }
+
+        .customer-content-area::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .customer-content-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .customer-content-area::-webkit-scrollbar-thumb {
+            background: #263d59;
+            border-radius: 20px;
+        }
+
+        .customer-content {
+            width: 100%;
+            max-width: 1850px;
+            margin: 0 auto;
+        }
+
+
+        /* =========================================================
+           HEADER
+           ========================================================= */
+
+        .page-header {
+            position: relative;
+
+            margin-bottom: 22px;
+
+            padding: 24px 26px;
+
+            border-radius: 18px;
+
+            overflow: hidden;
+
+            background:
+                radial-gradient(
+                    circle at 85% 20%,
+                    rgba(59, 130, 246, 0.18),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 65% 100%,
+                    rgba(139, 92, 246, 0.12),
+                    transparent 30%
+                ),
+                linear-gradient(
+                    145deg,
+                    #102139,
+                    #0a1728
+                );
+
+            border: 1px solid #1d3551;
+
+            box-shadow:
+                0 16px 38px rgba(0, 0, 0, 0.18);
+        }
+
+        .page-header::before {
+            content: "";
+
+            position: absolute;
+
+            left: 0;
+            top: 0;
+            bottom: 0;
+
+            width: 4px;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    #3b82f6,
+                    #8b5cf6,
+                    #06b6d4
+                );
+        }
+
+        .page-eyebrow {
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            margin-bottom: 8px;
+
+            color: #69a7ff;
+
+            font-size: 10px;
+
+            font-weight: 800;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
+        }
+
+        .page-eyebrow-dot {
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: #3b82f6;
+
+            box-shadow:
+                0 0 0 4px rgba(59, 130, 246, 0.10);
+        }
+
+        .page-title {
+            margin: 0;
+
+            font-size: 31px;
+
+            font-weight: 800;
+
+            line-height: 1.15;
+
+            letter-spacing: -0.8px;
+
+            color: #f6f9fd;
+        }
+
+        .page-subtitle {
+            max-width: 720px;
+
+            margin-top: 8px;
+
+            color: #8fa1b8;
+
+            font-size: 13px;
+
+            line-height: 1.6;
+        }
+
+
+        /* =========================================================
+           FILTER CARD
+           ========================================================= */
+
+        .filter-card {
+            position: relative;
+
+            margin-bottom: 18px;
+
+            padding: 18px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #101f33,
+                    #0b1728
+                );
+
+            border: 1px solid #1c314b;
+
+            border-radius: 16px;
+
+            box-shadow:
+                0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .filter-card::before {
+            content: "";
+
+            position: absolute;
+
+            left: 0;
+            right: 0;
+            top: 0;
+
+            height: 2px;
+
+            border-radius:
+                16px 16px 0 0;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #3b82f6,
+                    #8b5cf6,
+                    #06b6d4
+                );
+        }
+
+        .filter-heading {
+            display: flex;
+
+            align-items: center;
+
+            gap: 9px;
+
+            margin-bottom: 14px;
+
+            color: #e8eef7;
+
+            font-size: 13px;
+
+            font-weight: 750;
+        }
+
+        .filter-heading-icon {
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            width: 27px;
+            height: 27px;
+
+            border-radius: 8px;
+
+            background:
+                rgba(59, 130, 246, 0.12);
+
+            color: #60a5fa;
+
+            font-size: 13px;
+        }
+
+        .filter-grid {
+            display: grid;
+
+            grid-template-columns:
+                minmax(230px, 1.5fr)
+                minmax(170px, 1fr)
+                minmax(150px, 1fr)
+                minmax(150px, 1fr)
+                auto;
+
+            gap: 12px;
+
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 7px;
+        }
+
+        .filter-label {
+            color: #7e90a7;
+
+            font-size: 10px;
+
+            font-weight: 800;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.7px;
+        }
+
+        select,
+        input[type="date"] {
+
+            width: 100%;
+            height: 42px;
+
+            padding:
+                0 12px;
+
+            border:
+                1px solid #263c56;
+
+            border-radius: 9px;
+
+            outline: none;
+
+            background: #081421;
+
+            color: #e7edf6;
+
+            font-size: 12px;
+
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease,
+                background 0.2s ease;
+        }
+
+        select:hover,
+        input[type="date"]:hover {
+            background: #0a1828;
+
+            border-color: #34516f;
+        }
+
+        select:focus,
+        input[type="date"]:focus {
+            border-color: #4f8cff;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(79, 140, 255, 0.12);
+        }
+
+        .filter-button {
+            height: 42px;
+
+            padding:
+                0 22px;
+
+            border: none;
+
+            border-radius: 9px;
+
+            cursor: pointer;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #2563eb,
+                    #4f46e5
+                );
+
+            color: #ffffff;
+
+            font-size: 12px;
+
+            font-weight: 750;
+
+            box-shadow:
+                0 8px 20px
+                rgba(37, 99, 235, 0.22);
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease,
+                filter 0.2s ease;
+        }
+
+        .filter-button:hover {
+            transform:
+                translateY(-1px);
+
+            filter:
+                brightness(1.08);
+
+            box-shadow:
+                0 11px 25px
+                rgba(37, 99, 235, 0.32);
+        }
+
+        .filter-button:active {
+            transform:
+                translateY(0);
+        }
+
+        .custom-date-field {
+            display: none;
+        }
+
+
+        /* =========================================================
+           MESSAGES
+           ========================================================= */
+
+        .message {
+            display: flex;
+
+            align-items: flex-start;
+
+            gap: 10px;
+
+            margin-bottom: 18px;
+
+            padding:
+                13px 15px;
+
+            border-radius: 12px;
+
+            font-size: 12px;
+
+            line-height: 1.55;
+        }
+
+        .message::before {
+            flex-shrink: 0;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            width: 23px;
+            height: 23px;
+
+            border-radius: 7px;
+
+            font-size: 11px;
+
+            font-weight: 800;
+        }
+
+        .message-error {
+            background:
+                rgba(127, 29, 29, 0.22);
+
+            border:
+                1px solid #71343c;
+
+            color: #ffb8c0;
+        }
+
+        .message-error::before {
+            content: "!";
+
+            background:
+                rgba(239, 68, 68, 0.13);
+
+            color: #f87171;
+        }
+
+        .message-warning {
+            background:
+                rgba(120, 83, 20, 0.18);
+
+            border:
+                1px solid #69531e;
+
+            color: #f2d98c;
+        }
+
+        .message-warning::before {
+            content: "!";
+
+            background:
+                rgba(245, 158, 11, 0.12);
+
+            color: #fbbf24;
+        }
+
+
+        /* =========================================================
+           DATASET INFORMATION
+           ========================================================= */
+
+        .dataset-info {
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 8px;
+
+            margin-bottom: 14px;
+        }
+
+        .info-chip {
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 6px;
+
+            min-height: 31px;
+
+            padding:
+                6px 10px;
+
+            border:
+                1px solid #1c3048;
+
+            border-radius: 8px;
+
+            background:
+                rgba(12, 25, 42, 0.9);
+
+            color: #71849b;
+
+            font-size: 10px;
+        }
+
+        .info-chip strong {
+            color: #dfe8f3;
+
+            font-weight: 700;
+        }
+
+
+        /* =========================================================
+           PERIOD CARD
+           ========================================================= */
+
+        .period-card {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            position: relative;
+
+            overflow: hidden;
+
+            margin-bottom: 23px;
+
+            padding:
+                15px 18px;
+
+            border:
+                1px solid #244064;
+
+            border-radius: 13px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(37, 99, 235, 0.13),
+                    rgba(79, 70, 229, 0.07),
+                    rgba(6, 182, 212, 0.04)
+                );
+        }
+
+        .period-card::after {
+            content: "";
+
+            position: absolute;
+
+            right: -35px;
+            top: -55px;
+
+            width: 140px;
+            height: 140px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(59, 130, 246, 0.07);
+        }
+
+        .period-title {
+            color: #7188a5;
+
+            font-size: 9px;
+
+            font-weight: 800;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.9px;
+        }
+
+        .period-value {
+            margin-top: 5px;
+
+            color: #edf4ff;
+
+            font-size: 15px;
+
+            font-weight: 700;
+        }
+
+        .period-badge {
+            position: relative;
+            z-index: 1;
+
+            padding:
+                6px 10px;
+
+            border:
+                1px solid rgba(96, 165, 250, 0.18);
+
+            border-radius: 8px;
+
+            background:
+                rgba(59, 130, 246, 0.08);
+
+            color: #72a9ff;
+
+            font-size: 9px;
+
+            font-weight: 800;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.55px;
+        }
+
+
+        /* =========================================================
+           SECTION TITLE
+           ========================================================= */
+
+        .section-title {
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            margin:
+                28px 0 14px;
+
+            color: #edf3fb;
+
+            font-size: 17px;
+
+            font-weight: 750;
+
+            letter-spacing: -0.2px;
+        }
+
+        .section-title::before {
+            content: "";
+
+            width: 4px;
+            height: 19px;
+
+            flex-shrink: 0;
+
+            border-radius: 4px;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    #3b82f6,
+                    #8b5cf6,
+                    #06b6d4
+                );
+        }
+
+        .section-title-text {
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+        }
+
+        .section-count {
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            min-width: 22px;
+            height: 20px;
+
+            padding: 0 7px;
+
+            border-radius: 7px;
+
+            background:
+                rgba(59, 130, 246, 0.10);
+
+            color: #6ea8ff;
+
+            font-size: 9px;
+
+            font-weight: 800;
+        }
+
+
+        /* =========================================================
+           KPI CARDS
+           ========================================================= */
+
+/* =========================================================
+   KPI GRID
+========================================================= */
+
+.kpi-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(6, minmax(0, 1fr));
+
+    gap: 13px;
+}
+
+
+/* =========================================================
+   KPI CARD BASE
+========================================================= */
+
+.kpi-card {
+    position: relative;
+
+    min-height: 155px;
+
+    padding: 17px;
+
+    overflow: hidden;
+
+    border: 1px solid transparent;
+
+    border-radius: 15px;
+
+    color: #ffffff;
+
+    box-shadow:
+        0 10px 25px
+        rgba(0, 0, 0, 0.16);
+
+    transition:
+        transform 0.22s ease,
+        box-shadow 0.22s ease,
+        filter 0.22s ease;
+}
+
+
+/* =========================================================
+   HOVER
+========================================================= */
+
+.kpi-card:hover {
+    transform:
+        translateY(-4px);
+
+    box-shadow:
+        0 16px 32px
+        rgba(0, 0, 0, 0.24);
+
+    filter:
+        brightness(1.06);
+}
+
+
+/* =========================================================
+   DECORATIVE GLOW
+========================================================= */
+
+.kpi-card::before {
+    content: "";
+
+    position: absolute;
+
+    right: -45px;
+    top: -45px;
+
+    width: 135px;
+    height: 135px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255, 255, 255, 0.18);
+
+    opacity: 0.45;
+}
+
+
+/* =========================================================
+   BOTTOM ACCENT
+========================================================= */
+
+.kpi-card::after {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    height: 4px;
+
+    background:
+        rgba(255, 255, 255, 0.45);
+}
+
+
+/* =========================================================
+   BLUE
+========================================================= */
+
+.kpi-blue {
+    background:
+        linear-gradient(
+            145deg,
+            #2563eb,
+            #1d4ed8
+        );
+
+    border-color:
+        #3b82f6;
+}
+
+
+/* =========================================================
+   CYAN
+========================================================= */
+
+.kpi-cyan {
+    background:
+        linear-gradient(
+            145deg,
+            #0891b2,
+            #0e7490
+        );
+
+    border-color:
+        #06b6d4;
+}
+
+
+/* =========================================================
+   GREEN
+========================================================= */
+
+.kpi-green {
+    background:
+        linear-gradient(
+            145deg,
+            #16a34a,
+            #15803d
+        );
+
+    border-color:
+        #22c55e;
+}
+
+
+/* =========================================================
+   PURPLE
+========================================================= */
+
+.kpi-purple {
+    background:
+        linear-gradient(
+            145deg,
+            #7c3aed,
+            #6d28d9
+        );
+
+    border-color:
+        #8b5cf6;
+}
+
+
+/* =========================================================
+   ORANGE
+========================================================= */
+
+.kpi-orange {
+    background:
+        linear-gradient(
+            145deg,
+            #ea580c,
+            #c2410c
+        );
+
+    border-color:
+        #f59e0b;
+}
+
+
+/* =========================================================
+   PINK
+========================================================= */
+
+.kpi-pink {
+    background:
+        linear-gradient(
+            145deg,
+            #db2777,
+            #be185d
+        );
+
+    border-color:
+        #ec4899;
+}
+
+
+/* =========================================================
+   KPI ICON
+========================================================= */
+
+.kpi-icon {
+    position: relative;
+
+    z-index: 1;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 38px;
+    height: 38px;
+
+    margin-bottom: 13px;
+
+    border:
+        1px solid
+        rgba(255,255,255,0.20);
+
+    border-radius: 10px;
+
+    background:
+        rgba(255,255,255,0.14);
+
+    color:
+        #ffffff;
+
+    font-size: 17px;
+
+    box-shadow:
+        inset 0 1px 0
+        rgba(255,255,255,0.12);
+}
+
+
+/* =========================================================
+   KPI LABEL
+========================================================= */
+
+.kpi-label {
+    position: relative;
+
+    z-index: 1;
+
+    display: block;
+
+    color:
+        rgba(255,255,255,0.82);
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.65px;
+}
+
+
+/* =========================================================
+   KPI VALUE
+========================================================= */
+
+.kpi-value {
+    position: relative;
+
+    z-index: 1;
+
+    margin-top: 7px;
+
+    color:
+        #ffffff;
+
+    font-size: 24px;
+
+    line-height: 1.15;
+
+    font-weight: 800;
+
+    letter-spacing: -0.4px;
+}
+
+
+        /* =========================================================
+           CHART GRID
+           ========================================================= */
+
+        .chart-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+
+            gap: 17px;
+
+            margin-bottom: 12px;
+        }
+
+        .chart-card {
+            position: relative;
+
+            min-width: 0;
+
+            min-height: 395px;
+
+            padding: 20px;
+
+            overflow: hidden;
+
+            border:
+                1px solid #1c3048;
+
+            border-radius: 16px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #0f1d30,
+                    #0b1727
+                );
+
+            box-shadow:
+                0 12px 30px
+                rgba(0, 0, 0, 0.15);
+
+            transition:
+                transform 0.22s ease,
+                border-color 0.22s ease,
+                box-shadow 0.22s ease;
+        }
+
+        .chart-card:hover {
+            transform:
+                translateY(-2px);
+
+            border-color:
+                #29425e;
+
+            box-shadow:
+                0 17px 35px
+                rgba(0, 0, 0, 0.20);
+        }
+
+        .chart-card.full-width {
+            grid-column:
+                1 / -1;
+        }
+
+        .chart-card::before {
+            content: "";
+
+            position: absolute;
+
+            left: 0;
+            right: 0;
+            top: 0;
+
+            height: 2px;
+
+            opacity: 0.95;
+        }
+
+        .chart-blue::before {
+            background:
+                linear-gradient(
+                    90deg,
+                    #3b82f6,
+                    #60a5fa
+                );
+        }
+
+        .chart-cyan::before {
+            background:
+                linear-gradient(
+                    90deg,
+                    #06b6d4,
+                    #22d3ee
+                );
+        }
+
+        .chart-purple::before {
+            background:
+                linear-gradient(
+                    90deg,
+                    #7c3aed,
+                    #a78bfa
+                );
+        }
+
+        .chart-green::before {
+            background:
+                linear-gradient(
+                    90deg,
+                    #16a34a,
+                    #4ade80
+                );
+        }
+
+        .chart-orange::before {
+            background:
+                linear-gradient(
+                    90deg,
+                    #ea580c,
+                    #fbbf24
+                );
+        }
+
+        .chart-header {
+            display: flex;
+
+            align-items: flex-start;
+
+            justify-content: space-between;
+
+            gap: 14px;
+
+            margin-bottom: 17px;
+        }
+
+        .chart-title-wrap {
+            display: flex;
+
+            align-items: flex-start;
+
+            gap: 11px;
+        }
+
+        .chart-icon {
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            flex-shrink: 0;
+
+            width: 34px;
+            height: 34px;
+
+            border-radius: 9px;
+
+            font-size: 14px;
+
+            background:
+                rgba(255,255,255,0.04);
+
+            border:
+                1px solid rgba(255,255,255,0.05);
+        }
+
+        .chart-blue .chart-icon {
+            color: #60a5fa;
+            background:
+                rgba(59,130,246,0.10);
+        }
+
+        .chart-cyan .chart-icon {
+            color: #22d3ee;
+            background:
+                rgba(6,182,212,0.10);
+        }
+
+        .chart-purple .chart-icon {
+            color: #a78bfa;
+            background:
+                rgba(139,92,246,0.10);
+        }
+
+        .chart-green .chart-icon {
+            color: #4ade80;
+            background:
+                rgba(34,197,94,0.10);
+        }
+
+        .chart-orange .chart-icon {
+            color: #fbbf24;
+            background:
+                rgba(245,158,11,0.10);
+        }
+
+        .chart-title {
+            margin: 0;
+
+            color: #edf3fa;
+
+            font-size: 14px;
+
+            line-height: 1.35;
+
+            font-weight: 750;
+        }
+
+        .chart-description {
+            max-width: 600px;
+
+            margin-top: 4px;
+
+            color: #75879d;
+
+            font-size: 10px;
+
+            line-height: 1.5;
+        }
+
+        .chart-badge {
+            flex-shrink: 0;
+
+            padding:
+                5px 8px;
+
+            border:
+                1px solid #243952;
+
+            border-radius: 7px;
+
+            background:
+                rgba(255,255,255,0.035);
+
+            color: #7f91a7;
+
+            font-size: 8px;
+
+            font-weight: 800;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.55px;
+        }
+
+        .chart-container {
+            position: relative;
+
+            width: 100%;
+
+            height: 300px;
+        }
+
+        .chart-container.large {
+            height: 325px;
+        }
+
+
+        /* =========================================================
+           UNAVAILABLE
+           ========================================================= */
+
+        .unavailable {
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            justify-content: center;
+
+            height: 300px;
+
+            padding: 28px;
+
+            border:
+                1px dashed #2a405a;
+
+            border-radius: 11px;
+
+            background:
+                rgba(255,255,255,0.012);
+
+            color: #74869c;
+
+            font-size: 11px;
+
+            line-height: 1.65;
+
+            text-align: center;
+        }
+
+        .unavailable-icon {
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            width: 45px;
+            height: 45px;
+
+            margin-bottom: 12px;
+
+            border:
+                1px solid #243952;
+
+            border-radius: 13px;
+
+            background:
+                rgba(255,255,255,0.035);
+
+            color: #6e8198;
+
+            font-size: 18px;
+        }
+
+        .unavailable-title {
+            margin-bottom: 5px;
+
+            color: #a3b2c4;
+
+            font-size: 12px;
+
+            font-weight: 700;
+        }
+
+
+        /* =========================================================
+           SMART INSIGHTS
+           ========================================================= */
+
+        .insights-section {
+            margin-top: 34px;
+
+            margin-bottom: 28px;
+        }
+
+        .insights-header {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 15px;
+
+            margin-bottom: 14px;
+        }
+
+        .insights-header .section-title {
+            margin:
+                0;
+        }
+
+        .insights-label {
+            padding:
+                6px 10px;
+
+            border:
+                1px solid rgba(139,92,246,0.18);
+
+            border-radius: 8px;
+
+            background:
+                rgba(139,92,246,0.07);
+
+            color: #a78bfa;
+
+            font-size: 8px;
+
+            font-weight: 800;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.65px;
+        }
+
+        .insights-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, minmax(0, 1fr));
+
+            gap: 14px;
+        }
+
+        .insight-card {
+            position: relative;
+
+            min-height: 165px;
+
+            padding: 19px;
+
+            overflow: hidden;
+
+            border:
+                1px solid #1d324a;
+
+            border-radius: 14px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #101f33,
+                    #0c1829
+                );
+
+            box-shadow:
+                0 10px 25px
+                rgba(0, 0, 0, 0.13);
+
+            transition:
+                transform 0.2s ease,
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        .insight-card:hover {
+            transform:
+                translateY(-3px);
+
+            border-color:
+                #304967;
+
+            box-shadow:
+                0 16px 30px
+                rgba(0, 0, 0, 0.19);
+        }
+
+        .insight-card::before {
+            content: "";
+
+            position: absolute;
+
+            left: 0;
+            top: 0;
+            bottom: 0;
+
+            width: 3px;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    #3b82f6,
+                    #8b5cf6
+                );
+        }
+
+        .insight-card::after {
+            content: "";
+
+            position: absolute;
+
+            right: -55px;
+            bottom: -55px;
+
+            width: 130px;
+            height: 130px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(139,92,246,0.035);
+        }
+
+        .insight-top {
+            position: relative;
+            z-index: 1;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 10px;
+
+            margin-bottom: 11px;
+        }
+
+        .insight-type {
+            color: #60a5fa;
+
+            font-size: 8px;
+
+            font-weight: 800;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.75px;
+        }
+
+        .insight-number {
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            width: 25px;
+            height: 25px;
+
+            border:
+                1px solid rgba(59,130,246,0.13);
+
+            border-radius: 8px;
+
+            background:
+                rgba(59,130,246,0.08);
+
+            color: #72a9ff;
+
+            font-size: 9px;
+
+            font-weight: 800;
+        }
+
+        .insight-title {
+            position: relative;
+            z-index: 1;
+
+            color: #edf3fb;
+
+            font-size: 13px;
+
+            font-weight: 750;
+
+            line-height: 1.4;
+        }
+
+        .insight-description {
+            position: relative;
+            z-index: 1;
+
+            margin-top: 8px;
+
+            color: #8495aa;
+
+            font-size: 11px;
+
+            line-height: 1.65;
+        }
+
+        .no-insights {
+            padding:
+                22px;
+
+            border:
+                1px dashed #263952;
+
+            border-radius: 12px;
+
+            background:
+                #0d1a2b;
+
+            color: #77899f;
+
+            font-size: 11px;
+
+            text-align: center;
+        }
+
+
+        /* =========================================================
+           BOTTOM SPACE
+           ========================================================= */
+
+        .dashboard-footer-space {
+            height: 10px;
+        }
+
+
+        /* =========================================================
+           RESPONSIVE
+           ========================================================= */
+
+        @media (max-width: 1450px) {
+
+            .kpi-grid {
+                grid-template-columns:
+                    repeat(3, minmax(0, 1fr));
+            }
+
+        }
+
+        @media (max-width: 1180px) {
+
+            .filter-grid {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+            }
+
+            .filter-button {
+                width: 100%;
+            }
+
+            .insights-grid {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+            }
+
+        }
+
+        @media (max-width: 920px) {
+
+            .sidebar-wrapper {
+                flex-basis: 230px;
+
+                width: 230px;
+            }
+
+            .customer-content-area {
+                width:
+                    calc(100% - 230px);
+
+                padding:
+                    20px;
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-card.full-width {
+                grid-column: auto;
+            }
+
+            .page-title {
+                font-size: 27px;
+            }
+
+        }
+
+        @media (max-width: 700px) {
+
+            .sidebar-wrapper {
+                display: none;
+            }
+
+            .customer-content-area {
+                width: 100%;
+
+                padding:
+                    14px;
+            }
+
+            .page-header {
+                padding:
+                    20px;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .kpi-grid {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-card {
+                padding: 16px;
+
+                min-height: 370px;
+            }
+
+            .chart-container {
+                height: 275px;
+            }
+
+            .chart-container.large {
+                height: 290px;
+            }
+
+        }
+
+        @media (max-width: 450px) {
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .period-card {
+                align-items: flex-start;
+
+                flex-direction: column;
+
+                gap: 10px;
+            }
+
+            .insights-header {
+                align-items: flex-start;
+
+                flex-direction: column;
+            }
+
+            .chart-header {
+                align-items: flex-start;
+            }
+
+            .chart-badge {
+                display: none;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="customer-page">
+
+
+    <!-- =========================================================
+         SIDEBAR
+         ========================================================= -->
+
+    <div class="sidebar-wrapper">
+
+        {% include "includes/smart_sidebar.html" %}
+
+    </div>
+
+
+    <!-- =========================================================
+         MAIN CONTENT
+         ========================================================= -->
+
+    <main class="customer-content-area">
+
+        <div class="customer-content">
+
+
+            <!-- =================================================
+                 PAGE HEADER
+                 ================================================= -->
+
+            <div class="page-header">
+
+                <div class="page-eyebrow">
+
+                    <span class="page-eyebrow-dot"></span>
+
+                    Customer Analytics
+
+                </div>
+
+                <h1 class="page-title">
+                    Customer Intelligence
+                </h1>
+
+                <div class="page-subtitle">
+                    Understand customer growth, value,
+                    segmentation, status and regional
+                    distribution using the selected
+                    customer dataset.
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 FILTERS
+                 ================================================= -->
+
+            <form
+                method="get"
+                class="filter-card"
+            >
+
+                <div class="filter-heading">
+
+                    <div class="filter-heading-icon">
+                        ⚙
+                    </div>
+
+                    Analysis Filters
+
+                </div>
+
+
+                <div class="filter-grid">
+
+
+                    <!-- DATASET -->
+
+                    <div class="filter-group">
+
+                        <label
+                            class="filter-label"
+                            for="dataset"
+                        >
+                            Customer Dataset
+                        </label>
+
+                        <select
+                            id="dataset"
+                            name="dataset"
+                        >
+
+                            {% for dataset in customer_datasets %}
+
+                                <option
+                                    value="{{ dataset.id }}"
+                                    {% if selected_dataset and dataset.id == selected_dataset.id %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ dataset.name }}
+                                </option>
+
+                            {% empty %}
+
+                                <option value="">
+                                    No Customer Dataset
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- DATE RANGE -->
+
+                    <div class="filter-group">
+
+                        <label
+                            class="filter-label"
+                            for="range"
+                        >
+                            Date Range
+                        </label>
+
+                        <select
+                            id="range"
+                            name="range"
+                        >
+
+                            {% for value, label in date_range_options %}
+
+                                <option
+                                    value="{{ value }}"
+                                    {% if selected_range == value %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ label }}
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- FROM DATE -->
+
+                    <div class="filter-group custom-date-field">
+
+                        <label
+                            class="filter-label"
+                            for="from_date"
+                        >
+                            From Date
+                        </label>
+
+                        <input
+                            type="date"
+                            id="from_date"
+                            name="from_date"
+                            value="{{ analysis_from_date|date:'Y-m-d' }}"
+                        >
+
+                    </div>
+
+
+                    <!-- TO DATE -->
+
+                    <div class="filter-group custom-date-field">
+
+                        <label
+                            class="filter-label"
+                            for="to_date"
+                        >
+                            To Date
+                        </label>
+
+                        <input
+                            type="date"
+                            id="to_date"
+                            name="to_date"
+                            value="{{ analysis_to_date|date:'Y-m-d' }}"
+                        >
+
+                    </div>
+
+
+                    <!-- BUTTON -->
+
+                    <button
+                        type="submit"
+                        class="filter-button"
+                    >
+                        Apply Filters
+                    </button>
+
+                </div>
+
+            </form>
+
+
+            <!-- =================================================
+                 ERROR
+                 ================================================= -->
+
+            {% if error %}
+
+                <div class="message message-error">
+
+                    {{ error }}
+
+                </div>
+
+            {% endif %}
+
+
+            <!-- =================================================
+                 WARNING
+                 ================================================= -->
+
+            {% if warning %}
+
+                <div class="message message-warning">
+
+                    {{ warning }}
+
+                </div>
+
+            {% endif %}
+
+
+            {% if selected_dataset %}
+
+
+                <!-- =================================================
+                     DATASET INFORMATION
+                     ================================================= -->
+
+                <div class="dataset-info">
+
+                    <div class="info-chip">
+
+                        Dataset:
+
+                        <strong>
+                            {{ selected_dataset.name }}
+                        </strong>
+
+                    </div>
+
+
+                    {% if selected_version %}
+
+                        <div class="info-chip">
+
+                            Version:
+
+                            <strong>
+                                {{ selected_version.version_number }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="info-chip">
+
+                            Type:
+
+                            <strong>
+                                {{ selected_version.version_type }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="info-chip">
+
+                            Rows:
+
+                            <strong>
+                                {{ selected_version.total_rows|default:"—" }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="info-chip">
+
+                            Columns:
+
+                            <strong>
+                                {{ selected_version.total_columns|default:"—" }}
+                            </strong>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- =================================================
+                     PERIOD
+                     ================================================= -->
+
+                <div class="period-card">
+
+                    <div>
+
+                        <div class="period-title">
+                            Analysis Period
+                        </div>
+
+                        <div class="period-value">
+
+                            {% if analysis_from_date and analysis_to_date %}
+
+                                {{ analysis_from_date|date:"d M Y" }}
+
+                                &nbsp;→&nbsp;
+
+                                {{ analysis_to_date|date:"d M Y" }}
+
+                            {% else %}
+
+                                All available data
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                    <div class="period-badge">
+                        Data Driven
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     KPI SECTION
+                     ================================================= -->
+
+                <h2 class="section-title">
+
+                    <span class="section-title-text">
+                        Customer Overview
+                    </span>
+
+                    <span class="section-count">
+                        6 KPIs
+                    </span>
+
+                </h2>
+
+
+                <div class="kpi-grid">
+
+
+                    <!-- TOTAL CUSTOMERS -->
+
+                    <div class="kpi-card kpi-blue">
+
+                        <div class="kpi-icon">
+                            👥
+                        </div>
+
+                        <span class="kpi-label">
+                            Total Customers
+                        </span>
+
+                        <div class="kpi-value">
+
+                            {% if metrics.total_customers != None %}
+
+                                {{ metrics.total_customers|floatformat:0 }}
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- NEW CUSTOMERS -->
+
+                    <div class="kpi-card kpi-cyan">
+
+                        <div class="kpi-icon">
+                            ✨
+                        </div>
+
+                        <span class="kpi-label">
+                            New Customers
+                        </span>
+
+                        <div class="kpi-value">
+
+                            {% if metrics.new_customers != None %}
+
+                                {{ metrics.new_customers|floatformat:0 }}
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ACTIVE -->
+
+                    <div class="kpi-card kpi-green">
+
+                        <div class="kpi-icon">
+                            ●
+                        </div>
+
+                        <span class="kpi-label">
+                            Active Customers
+                        </span>
+
+                        <div class="kpi-value">
+
+                            {% if metrics.active_customers != None %}
+
+                                {{ metrics.active_customers|floatformat:0 }}
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- REPEAT -->
+
+                    <div class="kpi-card kpi-purple">
+
+                        <div class="kpi-icon">
+                            ↻
+                        </div>
+
+                        <span class="kpi-label">
+                            Repeat Customers
+                        </span>
+
+                        <div class="kpi-value">
+
+                            {% if metrics.repeat_customers != None %}
+
+                                {{ metrics.repeat_customers|floatformat:0 }}
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- VALUE -->
+
+                    <div class="kpi-card kpi-orange">
+
+                        <div class="kpi-icon">
+                            ₹
+                        </div>
+
+                        <span class="kpi-label">
+                            Average Customer Value
+                        </span>
+
+                        <div class="kpi-value">
+
+                            {% if metrics.average_customer_value != None %}
+
+                                ₹{{ metrics.average_customer_value|floatformat:0 }}
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- GROWTH -->
+
+                    <div class="kpi-card kpi-pink">
+
+                        <div class="kpi-icon">
+                            ↗
+                        </div>
+
+                        <span class="kpi-label">
+                            Customer Growth
+                        </span>
+
+                        <div class="kpi-value">
+
+                            {% if metrics.customer_growth != None %}
+
+                                {{ metrics.customer_growth|floatformat:1 }}%
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     CUSTOMER ANALYTICS
+                     ================================================= -->
+
+                <h2 class="section-title">
+
+                    <span class="section-title-text">
+                        Customer Analytics
+                    </span>
+
+                </h2>
+
+
+                <div class="chart-grid">
+
+
+                    <!-- =================================================
+                         REGISTRATION TREND
+                         ================================================= -->
+
+                    <div class="chart-card chart-blue full-width">
+
+                        <div class="chart-header">
+
+                            <div class="chart-title-wrap">
+
+                                <div class="chart-icon">
+                                    ↗
+                                </div>
+
+                                <div>
+
+                                    <h3 class="chart-title">
+                                        Customer Registration Trend
+                                    </h3>
+
+                                    <div class="chart-description">
+                                        Customer acquisition pattern
+                                        across the selected period.
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="chart-badge">
+                                Trend
+                            </div>
+
+                        </div>
+
+
+                        {% if chart_data.registration_trend %}
+
+                            <div class="chart-container large">
+
+                                <canvas
+                                    id="registrationTrendChart"
+                                ></canvas>
+
+                            </div>
+
+                        {% else %}
+
+                            <div class="unavailable">
+
+                                <div class="unavailable-icon">
+                                    ↗
+                                </div>
+
+                                <div class="unavailable-title">
+                                    Registration Trend Unavailable
+                                </div>
+
+                                Customer Registration Trend
+                                is not available because a
+                                compatible registration date
+                                column or usable data was not
+                                found.
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- =================================================
+                         REGION
+                         ================================================= -->
+
+                    <div class="chart-card chart-cyan">
+
+                        <div class="chart-header">
+
+                            <div class="chart-title-wrap">
+
+                                <div class="chart-icon">
+                                    ◉
+                                </div>
+
+                                <div>
+
+                                    <h3 class="chart-title">
+                                        Customers by Region
+                                    </h3>
+
+                                    <div class="chart-description">
+                                        Geographic distribution of
+                                        unique customers.
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="chart-badge">
+                                Region
+                            </div>
+
+                        </div>
+
+
+                        {% if chart_data.regions %}
+
+                            <div class="chart-container">
+
+                                <canvas
+                                    id="regionChart"
+                                ></canvas>
+
+                            </div>
+
+                        {% else %}
+
+                            <div class="unavailable">
+
+                                <div class="unavailable-icon">
+                                    ◉
+                                </div>
+
+                                <div class="unavailable-title">
+                                    Regional Analysis Unavailable
+                                </div>
+
+                                Customers by Region is not
+                                available because a compatible
+                                Region column was not found.
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- =================================================
+                         SEGMENT
+                         ================================================= -->
+
+                    <div class="chart-card chart-purple">
+
+                        <div class="chart-header">
+
+                            <div class="chart-title-wrap">
+
+                                <div class="chart-icon">
+                                    ◌
+                                </div>
+
+                                <div>
+
+                                    <h3 class="chart-title">
+                                        Customers by Segment
+                                    </h3>
+
+                                    <div class="chart-description">
+                                        Customer distribution across
+                                        available segments.
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="chart-badge">
+                                Segment
+                            </div>
+
+                        </div>
+
+
+                        {% if chart_data.segments %}
+
+                            <div class="chart-container">
+
+                                <canvas
+                                    id="segmentChart"
+                                ></canvas>
+
+                            </div>
+
+                        {% else %}
+
+                            <div class="unavailable">
+
+                                <div class="unavailable-icon">
+                                    ◌
+                                </div>
+
+                                <div class="unavailable-title">
+                                    Segmentation Unavailable
+                                </div>
+
+                                Customer Segmentation is not
+                                available because a compatible
+                                segment column was not found.
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- =================================================
+                         STATUS
+                         ================================================= -->
+
+                    <div class="chart-card chart-green">
+
+                        <div class="chart-header">
+
+                            <div class="chart-title-wrap">
+
+                                <div class="chart-icon">
+                                    ●
+                                </div>
+
+                                <div>
+
+                                    <h3 class="chart-title">
+                                        Customers by Status
+                                    </h3>
+
+                                    <div class="chart-description">
+                                        Distribution of customers by
+                                        their current status.
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="chart-badge">
+                                Status
+                            </div>
+
+                        </div>
+
+
+                        {% if chart_data.statuses %}
+
+                            <div class="chart-container">
+
+                                <canvas
+                                    id="statusChart"
+                                ></canvas>
+
+                            </div>
+
+                        {% else %}
+
+                            <div class="unavailable">
+
+                                <div class="unavailable-icon">
+                                    ●
+                                </div>
+
+                                <div class="unavailable-title">
+                                    Status Analysis Unavailable
+                                </div>
+
+                                Customer Status analysis is not
+                                available because a compatible
+                                status column was not found.
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- =================================================
+                         VALUE DISTRIBUTION
+                         ================================================= -->
+
+                    <div class="chart-card chart-orange">
+
+                        <div class="chart-header">
+
+                            <div class="chart-title-wrap">
+
+                                <div class="chart-icon">
+                                    ₹
+                                </div>
+
+                                <div>
+
+                                    <h3 class="chart-title">
+                                        Customer Value Distribution
+                                    </h3>
+
+                                    <div class="chart-description">
+                                        Customers grouped according
+                                        to accumulated value.
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="chart-badge">
+                                Value
+                            </div>
+
+                        </div>
+
+
+                        {% if chart_data.value_distribution %}
+
+                            <div class="chart-container">
+
+                                <canvas
+                                    id="valueDistributionChart"
+                                ></canvas>
+
+                            </div>
+
+                        {% else %}
+
+                            <div class="unavailable">
+
+                                <div class="unavailable-icon">
+                                    ₹
+                                </div>
+
+                                <div class="unavailable-title">
+                                    Customer Value Unavailable
+                                </div>
+
+                                Customer Value Distribution is not
+                                available because customer spend
+                                information was not found.
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     SMART INSIGHTS
+                     INTENTIONALLY AT THE BOTTOM
+                     ================================================= -->
+
+                <div class="insights-section">
+
+                    <div class="insights-header">
+
+                        <h2 class="section-title">
+
+                            <span class="section-title-text">
+                                Smart Customer Insights
+                            </span>
+
+                        </h2>
+
+                        <div class="insights-label">
+                            Data Driven Insights
+                        </div>
+
+                    </div>
+
+
+                    {% if insights %}
+
+                        <div class="insights-grid">
+
+                            {% for insight in insights %}
+
+                                <div class="insight-card">
+
+                                    <div class="insight-top">
+
+                                        <div class="insight-type">
+
+                                            {{ insight.type|default:"Insight"|title }}
+
+                                        </div>
+
+                                        <div class="insight-number">
+
+                                            {{ forloop.counter }}
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="insight-title">
+
+                                        {{ insight.title }}
+
+                                    </div>
+
+
+                                    <div class="insight-description">
+
+                                        {{ insight.description }}
+
+                                    </div>
+
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="no-insights">
+
+                            Customer insights are not available
+                            for the selected data.
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <div class="dashboard-footer-space"></div>
+
+
+            {% endif %}
+
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<script>
+
+    /* =============================================================
+       DATE RANGE
+       ============================================================= */
+
+    const rangeSelect =
+        document.getElementById("range");
+
+    const customFields =
+        document.querySelectorAll(
+            ".custom-date-field"
+        );
+
+
+    function updateCustomDateVisibility() {
+
+        if (!rangeSelect) {
+            return;
+        }
+
+        const isCustom =
+            rangeSelect.value === "custom";
+
+        customFields.forEach(
+            function(field) {
+
+                field.style.display =
+                    isCustom
+                        ? "flex"
+                        : "none";
+
+            }
+        );
+
+    }
+
+
+    if (rangeSelect) {
+
+        rangeSelect.addEventListener(
+            "change",
+            updateCustomDateVisibility
+        );
+
+        updateCustomDateVisibility();
+
+    }
+
+
+    /* =============================================================
+       CHART GLOBAL CONFIGURATION
+       ============================================================= */
+
+    Chart.defaults.color =
+        "#8192a8";
+
+    Chart.defaults.borderColor =
+        "rgba(64, 86, 115, 0.25)";
+
+    Chart.defaults.font.family =
+        "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+
+    Chart.defaults.font.size =
+        10;
+
+    Chart.defaults.animation.duration =
+        850;
+
+    Chart.defaults.animation.easing =
+        "easeOutQuart";
+
+
+    /* =============================================================
+       DATA FROM DJANGO
+       ============================================================= */
+
+    const registrationTrendData =
+        {{ registration_trend_json|default:"[]"|safe }};
+
+    const regionData =
+        {{ regions_json|default:"[]"|safe }};
+
+    const segmentData =
+        {{ segments_json|default:"[]"|safe }};
+
+    const statusData =
+        {{ statuses_json|default:"[]"|safe }};
+
+    const valueDistributionData =
+        {{ value_distribution_json|default:"[]"|safe }};
+
+
+    /* =============================================================
+       COLOR PALETTE
+       ============================================================= */
+
+    const palette = [
+        "#3b82f6",
+        "#06b6d4",
+        "#8b5cf6",
+        "#ec4899",
+        "#f59e0b",
+        "#22c55e",
+        "#14b8a6",
+        "#ef4444",
+        "#6366f1",
+        "#f97316"
+    ];
+
+
+    /* =============================================================
+       COMMON TOOLTIP
+       ============================================================= */
+
+    const tooltipConfig = {
+
+        backgroundColor:
+            "rgba(5, 14, 26, 0.97)",
+
+        titleColor:
+            "#f5f8fc",
+
+        bodyColor:
+            "#b7c4d4",
+
+        borderColor:
+            "#29415e",
+
+        borderWidth:
+            1,
+
+        padding:
+            12,
+
+        cornerRadius:
+            9,
+
+        displayColors:
+            true,
+
+        boxPadding:
+            5,
+
+        titleFont: {
+            size: 11,
+            weight: "700"
+        },
+
+        bodyFont: {
+            size: 11
+        }
+
+    };
+
+
+    /* =============================================================
+       COMMON SCALE CONFIG
+       ============================================================= */
+
+    function baseScales() {
+
+        return {
+
+            x: {
+
+                grid: {
+                    display: false
+                },
+
+                ticks: {
+                    color: "#74879e",
+                    padding: 7
+                }
+
+            },
+
+            y: {
+
+                beginAtZero: true,
+
+                grid: {
+                    color:
+                        "rgba(61, 82, 108, 0.20)"
+                },
+
+                ticks: {
+                    color: "#74879e",
+                    padding: 7,
+                    precision: 0
+                }
+
+            }
+
+        };
+
+    }
+
+
+    /* =============================================================
+       REGISTRATION TREND
+       ============================================================= */
+
+    const registrationCanvas =
+        document.getElementById(
+            "registrationTrendChart"
+        );
+
+
+    if (
+        registrationCanvas &&
+        registrationTrendData.length
+    ) {
+
+        const registrationContext =
+            registrationCanvas.getContext("2d");
+
+
+        const registrationGradient =
+            registrationContext.createLinearGradient(
+                0,
+                0,
+                0,
+                330
+            );
+
+
+        registrationGradient.addColorStop(
+            0,
+            "rgba(59, 130, 246, 0.40)"
+        );
+
+        registrationGradient.addColorStop(
+            0.55,
+            "rgba(59, 130, 246, 0.12)"
+        );
+
+        registrationGradient.addColorStop(
+            1,
+            "rgba(59, 130, 246, 0.015)"
+        );
+
+
+        new Chart(
+            registrationCanvas,
+            {
+
+                type: "line",
+
+                data: {
+
+                    labels:
+                        registrationTrendData.map(
+                            item => item.date
+                        ),
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                "New Customers",
+
+                            data:
+                                registrationTrendData.map(
+                                    item =>
+                                        item.customers
+                                ),
+
+                            borderColor:
+                                "#60a5fa",
+
+                            backgroundColor:
+                                registrationGradient,
+
+                            borderWidth:
+                                3,
+
+                            fill:
+                                true,
+
+                            tension:
+                                0.38,
+
+                            pointRadius:
+                                3,
+
+                            pointHoverRadius:
+                                7,
+
+                            pointBackgroundColor:
+                                "#60a5fa",
+
+                            pointBorderColor:
+                                "#07111f",
+
+                            pointBorderWidth:
+                                2,
+
+                            pointHoverBackgroundColor:
+                                "#ffffff",
+
+                            pointHoverBorderColor:
+                                "#60a5fa",
+
+                            pointHoverBorderWidth:
+                                3
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive:
+                        true,
+
+                    maintainAspectRatio:
+                        false,
+
+                    interaction: {
+
+                        mode:
+                            "index",
+
+                        intersect:
+                            false
+
+                    },
+
+                    plugins: {
+
+                        legend: {
+                            display: false
+                        },
+
+                        tooltip:
+                            tooltipConfig
+
+                    },
+
+                    scales: {
+
+                        x: {
+
+                            grid: {
+                                display: false
+                            },
+
+                            ticks: {
+
+                                maxTicksLimit:
+                                    12,
+
+                                color:
+                                    "#74879e",
+
+                                padding:
+                                    8
+
+                            }
+
+                        },
+
+                        y: {
+
+                            beginAtZero:
+                                true,
+
+                            grid: {
+
+                                color:
+                                    "rgba(61, 82, 108, 0.20)"
+
+                            },
+
+                            ticks: {
+
+                                precision:
+                                    0,
+
+                                color:
+                                    "#74879e",
+
+                                padding:
+                                    8
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =============================================================
+       REGION CHART
+       ============================================================= */
+
+    const regionCanvas =
+        document.getElementById(
+            "regionChart"
+        );
+
+
+    if (
+        regionCanvas &&
+        regionData.length
+    ) {
+
+        const regionContext =
+            regionCanvas.getContext("2d");
+
+
+        const regionGradient =
+            regionContext.createLinearGradient(
+                0,
+                0,
+                0,
+                300
+            );
+
+
+        regionGradient.addColorStop(
+            0,
+            "rgba(34, 211, 238, 0.85)"
+        );
+
+        regionGradient.addColorStop(
+            1,
+            "rgba(6, 182, 212, 0.30)"
+        );
+
+
+        new Chart(
+            regionCanvas,
+            {
+
+                type: "bar",
+
+                data: {
+
+                    labels:
+                        regionData.map(
+                            item =>
+                                item.region
+                        ),
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                "Customers",
+
+                            data:
+                                regionData.map(
+                                    item =>
+                                        item.customers
+                                ),
+
+                            backgroundColor:
+                                regionData.map(
+                                    (_, index) =>
+                                        palette[
+                                            index %
+                                            palette.length
+                                        ]
+                                ),
+
+                            borderWidth:
+                                0,
+
+                            borderRadius:
+                                8,
+
+                            borderSkipped:
+                                false,
+
+                            maxBarThickness:
+                                46,
+
+                            hoverBorderWidth:
+                                2,
+
+                            hoverBorderColor:
+                                "#ffffff"
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive:
+                        true,
+
+                    maintainAspectRatio:
+                        false,
+
+                    plugins: {
+
+                        legend: {
+                            display: false
+                        },
+
+                        tooltip: {
+
+                            ...tooltipConfig,
+
+                            callbacks: {
+
+                                label:
+                                    function(context) {
+
+                                        return (
+                                            " Customers: "
+                                            +
+                                            context.parsed.y
+                                        );
+
+                                    }
+
+                            }
+
+                        }
+
+                    },
+
+                    scales: {
+
+                        x: {
+
+                            grid: {
+                                display: false
+                            },
+
+                            ticks: {
+
+                                color:
+                                    "#74879e",
+
+                                padding:
+                                    7
+
+                            }
+
+                        },
+
+                        y: {
+
+                            beginAtZero:
+                                true,
+
+                            grid: {
+
+                                color:
+                                    "rgba(61, 82, 108, 0.20)"
+
+                            },
+
+                            ticks: {
+
+                                precision:
+                                    0,
+
+                                color:
+                                    "#74879e",
+
+                                padding:
+                                    7
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =============================================================
+       SEGMENT DOUGHNUT
+       ============================================================= */
+
+    const segmentCanvas =
+        document.getElementById(
+            "segmentChart"
+        );
+
+
+    if (
+        segmentCanvas &&
+        segmentData.length
+    ) {
+
+        new Chart(
+            segmentCanvas,
+            {
+
+                type:
+                    "doughnut",
+
+                data: {
+
+                    labels:
+                        segmentData.map(
+                            item =>
+                                item.segment
+                        ),
+
+                    datasets: [
+
+                        {
+
+                            data:
+                                segmentData.map(
+                                    item =>
+                                        item.customers
+                                ),
+
+                            backgroundColor:
+                                segmentData.map(
+                                    (_, index) =>
+                                        palette[
+                                            index %
+                                            palette.length
+                                        ]
+                                ),
+
+                            borderColor:
+                                "#0f1d30",
+
+                            borderWidth:
+                                4,
+
+                            hoverOffset:
+                                10,
+
+                            spacing:
+                                2
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive:
+                        true,
+
+                    maintainAspectRatio:
+                        false,
+
+                    cutout:
+                        "64%",
+
+                    plugins: {
+
+                        legend: {
+
+                            position:
+                                "bottom",
+
+                            labels: {
+
+                                usePointStyle:
+                                    true,
+
+                                pointStyle:
+                                    "circle",
+
+                                padding:
+                                    15,
+
+                                color:
+                                    "#9aa9bc",
+
+                                font: {
+
+                                    size:
+                                        10
+
+                                }
+
+                            }
+
+                        },
+
+                        tooltip: {
+
+                            ...tooltipConfig,
+
+                            callbacks: {
+
+                                label:
+                                    function(context) {
+
+                                        return (
+                                            " "
+                                            +
+                                            context.label
+                                            +
+                                            ": "
+                                            +
+                                            context.parsed
+                                            +
+                                            " customers"
+                                        );
+
+                                    }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =============================================================
+       STATUS CHART
+       ============================================================= */
+
+    const statusCanvas =
+        document.getElementById(
+            "statusChart"
+        );
+
+
+    if (
+        statusCanvas &&
+        statusData.length
+    ) {
+
+        new Chart(
+            statusCanvas,
+            {
+
+                type:
+                    "bar",
+
+                data: {
+
+                    labels:
+                        statusData.map(
+                            item =>
+                                item.status
+                        ),
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                "Customers",
+
+                            data:
+                                statusData.map(
+                                    item =>
+                                        item.customers
+                                ),
+
+                            backgroundColor:
+                                [
+                                    "rgba(34, 197, 94, 0.82)",
+                                    "rgba(74, 222, 128, 0.76)",
+                                    "rgba(16, 185, 129, 0.76)",
+                                    "rgba(52, 211, 153, 0.76)",
+                                    "rgba(20, 184, 166, 0.76)"
+                                ],
+
+                            borderWidth:
+                                0,
+
+                            borderRadius:
+                                8,
+
+                            borderSkipped:
+                                false,
+
+                            maxBarThickness:
+                                30
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    indexAxis:
+                        "y",
+
+                    responsive:
+                        true,
+
+                    maintainAspectRatio:
+                        false,
+
+                    plugins: {
+
+                        legend: {
+                            display: false
+                        },
+
+                        tooltip: {
+
+                            ...tooltipConfig,
+
+                            callbacks: {
+
+                                label:
+                                    function(context) {
+
+                                        return (
+                                            " Customers: "
+                                            +
+                                            context.parsed.x
+                                        );
+
+                                    }
+
+                            }
+
+                        }
+
+                    },
+
+                    scales: {
+
+                        x: {
+
+                            beginAtZero:
+                                true,
+
+                            grid: {
+
+                                color:
+                                    "rgba(61, 82, 108, 0.20)"
+
+                            },
+
+                            ticks: {
+
+                                precision:
+                                    0,
+
+                                color:
+                                    "#74879e",
+
+                                padding:
+                                    7
+
+                            }
+
+                        },
+
+                        y: {
+
+                            grid: {
+                                display: false
+                            },
+
+                            ticks: {
+
+                                color:
+                                    "#91a2b6",
+
+                                padding:
+                                    8
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =============================================================
+       CUSTOMER VALUE DISTRIBUTION
+       ============================================================= */
+
+    const valueCanvas =
+        document.getElementById(
+            "valueDistributionChart"
+        );
+
+
+    if (
+        valueCanvas &&
+        valueDistributionData.length
+    ) {
+
+        new Chart(
+            valueCanvas,
+            {
+
+                type:
+                    "bar",
+
+                data: {
+
+                    labels:
+                        valueDistributionData.map(
+                            item =>
+                                item.band
+                        ),
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                "Customers",
+
+                            data:
+                                valueDistributionData.map(
+                                    item =>
+                                        item.customers
+                                ),
+
+                            backgroundColor:
+                                [
+                                    "rgba(245, 158, 11, 0.72)",
+                                    "rgba(251, 191, 36, 0.76)",
+                                    "rgba(249, 115, 22, 0.78)",
+                                    "rgba(234, 88, 12, 0.78)",
+                                    "rgba(217, 119, 6, 0.82)"
+                                ],
+
+                            borderWidth:
+                                0,
+
+                            borderRadius:
+                                8,
+
+                            borderSkipped:
+                                false,
+
+                            maxBarThickness:
+                                52
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive:
+                        true,
+
+                    maintainAspectRatio:
+                        false,
+
+                    plugins: {
+
+                        legend: {
+                            display: false
+                        },
+
+                        tooltip: {
+
+                            ...tooltipConfig,
+
+                            callbacks: {
+
+                                label:
+                                    function(context) {
+
+                                        return (
+                                            " Customers: "
+                                            +
+                                            context.parsed.y
+                                        );
+
+                                    }
+
+                            }
+
+                        }
+
+                    },
+
+                    scales: {
+
+                        x: {
+
+                            grid: {
+                                display: false
+                            },
+
+                            ticks: {
+
+                                color:
+                                    "#74879e",
+
+                                padding:
+                                    7
+
+                            }
+
+                        },
+
+                        y: {
+
+                            beginAtZero:
+                                true,
+
+                            grid: {
+
+                                color:
+                                    "rgba(61, 82, 108, 0.20)"
+
+                            },
+
+                            ticks: {
+
+                                precision:
+                                    0,
+
+                                color:
+                                    "#74879e",
+
+                                padding:
+                                    7
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+
+</script>
+
+
+</body>
+
+</html>

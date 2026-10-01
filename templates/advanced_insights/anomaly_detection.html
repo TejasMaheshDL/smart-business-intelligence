@@ -1,0 +1,1063 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anomaly Detection | Smart Business Intelligence</title>
+
+    <!-- Google Fonts & Chart.js -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-base: #040911;
+            --bg-surface: #07111f;
+            --bg-card: rgba(11, 23, 42, 0.72);
+            --bg-card-hover: rgba(16, 32, 59, 0.85);
+
+            /* Deep dark KPI background */
+            --bg-kpi-dark: #030811;
+            --bg-kpi-card: #050d18;
+            --border-kpi: rgba(255, 255, 255, 0.06);
+
+            --border-subtle: rgba(79, 163, 255, 0.14);
+            --border-focus: rgba(79, 163, 255, 0.45);
+            
+            --accent-blue: #4fa3ff;
+            --accent-cyan: #22d3ee;
+            --accent-purple: #8b5cf6;
+            --accent-gradient: linear-gradient(135deg, #4fa3ff 0%, #22d3ee 100%);
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: rgba(190, 211, 235, 0.65);
+            
+            --status-green: #10b981;
+            --status-yellow: #f59e0b;
+            --status-red: #ff5263;
+
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(79, 163, 255, 0.12), transparent),
+                radial-gradient(circle 600px at 0% 100%, rgba(34, 211, 238, 0.04), transparent);
+            background-attachment: fixed;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Glow & Entrance Animations */
+        @keyframes subtlePulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.08); }
+        }
+
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-up {
+            animation: cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Shell & Independent Layout */
+        .smart-workspace-shell {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        #smart-bi-sidebar {
+            width: 270px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 1000;
+            padding: 1.75rem 1.25rem;
+        }
+
+        .anomaly-main {
+            margin-left: 270px;
+            flex: 1;
+            width: calc(100% - 270px);
+            min-height: 100vh;
+            padding: 2.5rem 3.5rem;
+            overflow-y: auto;
+        }
+
+        .anomaly-page {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .anomaly-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 2rem;
+            gap: 20px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--accent-cyan);
+            margin-bottom: 0.65rem;
+            text-transform: uppercase;
+        }
+
+        .eyebrow-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan);
+            animation: subtlePulse 2.5s infinite;
+        }
+
+        .anomaly-header h1 {
+            font-size: 2.15rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+            margin-bottom: 0.4rem;
+        }
+
+        .anomaly-header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            max-width: 650px;
+            line-height: 1.5;
+        }
+
+        .header-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: #6ee7b7;
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--status-green);
+            box-shadow: 0 0 10px var(--status-green);
+        }
+
+        /* Alerts */
+        .error-message {
+            margin-bottom: 1.5rem;
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #fca5a5;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+            margin-bottom: 2rem;
+            position: relative;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .panel-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .panel-heading h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .panel-heading span {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+            background: rgba(34, 211, 238, 0.08);
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            border: 1px solid rgba(34, 211, 238, 0.2);
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            align-items: flex-end;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .field select,
+        .field input {
+            width: 100%;
+            height: 44px;
+            padding: 0 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-subtle);
+            background-color: var(--bg-surface);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .field select {
+            appearance: none;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234fa3ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+        }
+
+        .field select:focus,
+        .field input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(79, 163, 255, 0.15);
+        }
+
+        .threshold-wrap {
+            position: relative;
+        }
+
+        .threshold-unit {
+            position: absolute;
+            right: 14px;
+            bottom: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            pointer-events: none;
+        }
+
+        .run-button {
+            height: 44px;
+            width: 100%;
+            border: none;
+            border-radius: var(--radius-md);
+            background: var(--accent-gradient);
+            color: #040911;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 18px rgba(34, 211, 238, 0.25);
+        }
+
+        .run-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(79, 163, 255, 0.35);
+        }
+
+        .source-strip {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 1.5rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .source-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .source-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.3rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(79, 163, 255, 0.08);
+            border: 1px solid rgba(79, 163, 255, 0.2);
+            color: var(--accent-blue);
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .source-badge.green {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        /* DARK THEME KPI CARDS */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background-color: var(--bg-kpi-card);
+            border: 1px solid var(--border-kpi);
+            border-radius: var(--radius-md);
+            padding: 1.4rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(79, 163, 255, 0.3);
+            box-shadow: 0 8px 26px rgba(0, 0, 0, 0.55);
+        }
+
+        .kpi-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .kpi-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-top: 0.6rem;
+            letter-spacing: -0.02em;
+        }
+
+        .kpi-sub {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.45rem;
+            line-height: 1.4;
+        }
+
+        .kpi-card.anomaly .kpi-value { color: var(--status-red); }
+        .kpi-card.normal .kpi-value { color: var(--status-green); }
+        .kpi-card.rate .kpi-value { color: var(--status-yellow); }
+
+        /* Section Headings */
+        .section-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 2rem 0 1rem;
+        }
+
+        .section-heading h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .section-heading span {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        /* Summary Card */
+        .summary-card {
+            background: linear-gradient(135deg, rgba(11, 23, 42, 0.9) 0%, rgba(7, 17, 31, 0.9) 100%);
+            border: 1px solid rgba(79, 163, 255, 0.25);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem 1.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-text {
+            color: #dbeafe;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Chart Canvas Card */
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+            backdrop-filter: blur(14px);
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        .chart-description {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .legend {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .legend-normal { background: var(--accent-blue); }
+        .legend-anomaly {
+            background: var(--status-red);
+            box-shadow: 0 0 8px var(--status-red);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 380px;
+            width: 100%;
+        }
+
+        /* Anomaly Table */
+        .table-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .anomaly-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        .anomaly-table th {
+            padding: 1rem 1.25rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .anomaly-table td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-muted);
+        }
+
+        .anomaly-table tbody tr:hover {
+            background: rgba(79, 163, 255, 0.03);
+        }
+
+        .value-cell {
+            color: #ffffff !important;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .z-score {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+        }
+
+        .z-high { color: var(--status-red); }
+        .z-low { color: var(--accent-cyan); }
+
+        .direction-high { color: var(--status-red); font-weight: 700; }
+        .direction-low { color: var(--accent-cyan); font-weight: 700; }
+
+        .severity {
+            display: inline-flex;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .severity-high {
+            background: rgba(255, 82, 99, 0.12);
+            color: #ff9aa7;
+            border: 1px solid rgba(255, 82, 99, 0.25);
+        }
+
+        .severity-critical {
+            background: rgba(255, 82, 99, 0.2);
+            color: #ffd4d9;
+            border: 1px solid rgba(255, 82, 99, 0.4);
+            box-shadow: 0 0 10px rgba(255, 82, 99, 0.15);
+        }
+
+        /* Empty States */
+        .empty-chart, .no-anomalies {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 3rem 1.5rem;
+        }
+
+        .empty-icon, .no-anomalies-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            background: rgba(79, 163, 255, 0.08);
+            border: 1px solid var(--border-subtle);
+            color: var(--accent-cyan);
+        }
+
+        .no-anomalies-icon {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.2);
+            color: var(--status-green);
+        }
+
+        .page-footer {
+            margin-top: 3.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        @media (max-width: 992px) {
+            #smart-bi-sidebar { position: relative; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-subtle); }
+            .anomaly-main { margin-left: 0; width: 100%; padding: 1.5rem; }
+            .anomaly-header { flex-direction: column; }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside id="smart-bi-sidebar">
+    {% include "includes/smart_sidebar.html" %}
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="anomaly-main">
+    <div class="anomaly-page">
+
+        <!-- HEADER -->
+        <header class="anomaly-header fade-up">
+            <div class="header-left">
+                <div class="eyebrow">
+                    <span class="eyebrow-dot"></span>
+                    Advanced Insights
+                </div>
+                <h1>Anomaly Detection</h1>
+                <p>Identify unusual values, abnormal business signals, and potential data points that significantly deviate from the normal behavior of your selected metric.</p>
+            </div>
+
+            <div class="header-status">
+                <span class="status-dot"></span>
+                {% if anomaly_result %} Analysis Completed {% else %} Ready for Analysis {% endif %}
+            </div>
+        </header>
+
+        <!-- ERROR MESSAGE -->
+        {% if analysis_error %}
+            <div class="error-message">
+                {{ analysis_error }}
+            </div>
+        {% endif %}
+
+        <!-- CONTROL PANEL -->
+        <section class="control-panel fade-up">
+            <div class="panel-heading">
+                <h2>Detection Configuration</h2>
+                <span>Z-Score Engine</span>
+            </div>
+
+            <form method="post" action="">
+                {% csrf_token %}
+
+                <div class="control-grid">
+                    <!-- DATASET -->
+                    <div class="field">
+                        <label>Dataset</label>
+                        <select name="dataset_selector" onchange="changeDataset(this.value)">
+                            {% for dataset in datasets %}
+                                <option value="{{ dataset.id }}" {% if selected_dataset and selected_dataset.id == dataset.id %}selected{% endif %}>
+                                    {{ dataset.name }} — {{ dataset.dataset_type }}
+                                </option>
+                            {% empty %}
+                                <option value="">No datasets available</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- VERSION -->
+                    <div class="field">
+                        <label>Dataset Version</label>
+                        <select name="version_selector" onchange="changeVersion(this.value)">
+                            {% for version in versions %}
+                                <option value="{{ version.id }}" {% if selected_version and selected_version.id == version.id %}selected{% endif %}>
+                                    Version {{ version.version_number }}
+                                    {% if version.version_type %} — {{ version.version_type }}{% endif %}
+                                    {% if version.is_current %} — Current{% endif %}
+                                </option>
+                            {% empty %}
+                                <option value="">No versions available</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- METRIC -->
+                    <div class="field">
+                        <label>Numeric Metric</label>
+                        <select name="metric_column" required>
+                            <option value="">Select metric</option>
+                            {% for column in numeric_columns %}
+                                <option value="{{ column }}" {% if selected_metric_column == column %}selected{% endif %}>
+                                    {{ column }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- THRESHOLD -->
+                    <div class="field threshold-wrap">
+                        <label>Z-Score Threshold</label>
+                        <input type="number" name="threshold" value="{{ selected_threshold|default:'2.5' }}" min="0.1" max="10" step="0.1" required>
+                        <span class="threshold-unit">σ</span>
+                    </div>
+
+                    <!-- DATE -->
+                    <div class="field">
+                        <label>Date Column <span style="color:var(--text-dim);">(Optional)</span></label>
+                        <select name="date_column">
+                            <option value="">No date column</option>
+                            {% for column in date_columns %}
+                                <option value="{{ column }}" {% if selected_date_column == column %}selected{% endif %}>
+                                    {{ column }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- ACTION BUTTON -->
+                    <div class="field">
+                        <button type="submit" class="run-button">Detect Anomalies</button>
+                    </div>
+                </div>
+
+                <!-- SOURCE STRIP -->
+                <div class="source-strip">
+                    <span class="source-label">Analysis Source</span>
+                    {% if selected_dataset %}
+                        <span class="source-badge">{{ selected_dataset.name }}</span>
+                        <span class="source-badge">{{ selected_dataset.dataset_type }}</span>
+                    {% endif %}
+                    {% if selected_version %}
+                        <span class="source-badge green">Version {{ selected_version.version_number }}</span>
+                    {% endif %}
+                    <span class="source-badge">Z-Score Engine</span>
+                </div>
+            </form>
+        </section>
+
+        <!-- KPI SUMMARY (DEEP DARK CARDS) -->
+        {% if anomaly_result %}
+            <section class="kpi-grid fade-up">
+                <div class="kpi-card">
+                    <div class="kpi-label">Records Analyzed</div>
+                    <div class="kpi-value">{{ anomaly_result.total_records|default:0 }}</div>
+                    <div class="kpi-sub">Valid numeric observations processed</div>
+                </div>
+
+                <div class="kpi-card normal">
+                    <div class="kpi-label">Normal Records</div>
+                    <div class="kpi-value">{{ anomaly_result.normal_records|default:0 }}</div>
+                    <div class="kpi-sub">Points within the threshold boundary</div>
+                </div>
+
+                <div class="kpi-card anomaly">
+                    <div class="kpi-label">Anomalies Detected</div>
+                    <div class="kpi-value">{{ anomaly_result.anomaly_count|default:0 }}</div>
+                    <div class="kpi-sub">Outliers beyond the defined deviation</div>
+                </div>
+
+                <div class="kpi-card rate">
+                    <div class="kpi-label">Anomaly Rate</div>
+                    <div class="kpi-value">{{ anomaly_result.anomaly_percentage|default:0|floatformat:2 }}%</div>
+                    <div class="kpi-sub">Proportion of atypical entries</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">Standard Deviation</div>
+                    <div class="kpi-value">{{ anomaly_result.standard_deviation|default:0|floatformat:2 }}</div>
+                    <div class="kpi-sub">Dispersion parameter (σ) of dataset</div>
+                </div>
+            </section>
+
+            <!-- DETECTION SUMMARY -->
+            <section class="summary-card fade-up">
+                <div class="summary-label">Detection Summary</div>
+                <div class="summary-text">{{ anomaly_result.summary }}</div>
+            </section>
+
+            <!-- CHART DISTRIBUTION -->
+            <div class="section-heading">
+                <h2>Anomaly Distribution</h2>
+                <span>{{ anomaly_result.metric_column }}</span>
+            </div>
+
+            <section class="chart-card fade-up">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Metric Behaviour & Anomalies</div>
+                        <div class="chart-description">Observations outside the configured Z-Score threshold are highlighted in red.</div>
+                    </div>
+                    <div class="legend">
+                        <span class="legend-item"><span class="legend-dot legend-normal"></span> Normal</span>
+                        <span class="legend-item"><span class="legend-dot legend-anomaly"></span> Anomaly</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="anomalyChart"></canvas>
+                </div>
+            </section>
+
+            <!-- STATISTICAL PROFILE (DEEP DARK CARDS) -->
+            <div class="section-heading">
+                <h2>Statistical Profile</h2>
+                <span>Metric Thresholds</span>
+            </div>
+
+            <section class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">Average</div>
+                    <div class="kpi-value">{{ anomaly_result.average_value|default:0|floatformat:2 }}</div>
+                    <div class="kpi-sub">Dataset mean (μ)</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Minimum</div>
+                    <div class="kpi-value">{{ anomaly_result.minimum_value|default:0|floatformat:2 }}</div>
+                    <div class="kpi-sub">Lowest value observed</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Maximum</div>
+                    <div class="kpi-value">{{ anomaly_result.maximum_value|default:0|floatformat:2 }}</div>
+                    <div class="kpi-sub">Highest value observed</div>
+                </div>
+                <div class="kpi-card anomaly">
+                    <div class="kpi-label">Highest Anomaly</div>
+                    <div class="kpi-value">
+                        {% if anomaly_result.highest_anomaly_value != None %}
+                            {{ anomaly_result.highest_anomaly_value|floatformat:2 }}
+                        {% else %} — {% endif %}
+                    </div>
+                    <div class="kpi-sub">Maximum upper outlier</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Lowest Anomaly</div>
+                    <div class="kpi-value">
+                        {% if anomaly_result.lowest_anomaly_value != None %}
+                            {{ anomaly_result.lowest_anomaly_value|floatformat:2 }}
+                        {% else %} — {% endif %}
+                    </div>
+                    <div class="kpi-sub">Minimum lower outlier</div>
+                </div>
+            </section>
+
+            <!-- ANOMALY TABLE -->
+            <div class="section-heading">
+                <h2>Detected Anomalies</h2>
+                <span>{{ anomaly_result.anomaly_count|default:0 }} observations</span>
+            </div>
+
+            <section class="table-card fade-up">
+                {% if anomaly_result.anomaly_data %}
+                    <div class="table-scroll">
+                        <table class="anomaly-table">
+                            <thead>
+                                <tr>
+                                    <th>Record</th>
+                                    <th>Date / Index</th>
+                                    <th>Value</th>
+                                    <th>Z-Score</th>
+                                    <th>Direction</th>
+                                    <th>Severity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for anomaly in anomaly_result.anomaly_data %}
+                                    <tr>
+                                        <td>#{{ anomaly.index }}</td>
+                                        <td>{{ anomaly.date }}</td>
+                                        <td class="value-cell">{{ anomaly.value|floatformat:2 }}</td>
+                                        <td class="z-score {% if anomaly.direction == 'High' %}z-high{% else %}z-low{% endif %}">
+                                            {{ anomaly.z_score|floatformat:2 }}
+                                        </td>
+                                        <td>
+                                            {% if anomaly.direction == "High" %}
+                                                <span class="direction-high">↑ High</span>
+                                            {% else %}
+                                                <span class="direction-low">↓ Low</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="severity {% if anomaly.severity == 'Critical' %}severity-critical{% else %}severity-high{% endif %}">
+                                                {{ anomaly.severity }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="no-anomalies">
+                        <div class="no-anomalies-icon">✓</div>
+                        <strong>No anomalies detected</strong>
+                        <span>All recorded observations fall inside the threshold limits.</span>
+                    </div>
+                {% endif %}
+            </section>
+
+        {% else %}
+            <!-- INITIAL EMPTY STATE -->
+            <section class="chart-card fade-up">
+                <div class="empty-chart">
+                    <div class="empty-icon">◈</div>
+                    <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.35rem;">Anomaly analysis is ready</h3>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; max-width: 480px; line-height: 1.5;">
+                        Select a dataset version, specify your numeric metric, calibrate the Z-Score threshold, and run detection to highlight statistical outliers.
+                    </p>
+                </div>
+            </section>
+        {% endif %}
+
+        <!-- FOOTER -->
+        <div class="page-footer">
+            Smart BI Advanced Insights &bull; Anomaly Detection &bull; Z-Score Statistical Engine
+        </div>
+
+    </div>
+</main>
+
+{% if anomaly_result %}
+    {{ anomaly_result.chart_data|json_script:"anomaly-chart-data" }}
+{% endif %}
+
+<script>
+    function changeDataset(datasetId) {
+        if (!datasetId) return;
+        const url = new URL(window.location.href);
+        url.searchParams.set("dataset", datasetId);
+        url.searchParams.delete("version");
+        url.searchParams.delete("metric_column");
+        url.searchParams.delete("date_column");
+        window.location.href = url.toString();
+    }
+
+    function changeVersion(versionId) {
+        if (!versionId) return;
+        const url = new URL(window.location.href);
+        url.searchParams.set("version", versionId);
+        url.searchParams.delete("metric_column");
+        url.searchParams.delete("date_column");
+        window.location.href = url.toString();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const canvas = document.getElementById("anomalyChart");
+        const dataElement = document.getElementById("anomaly-chart-data");
+
+        if (!canvas || !dataElement || typeof Chart === "undefined") return;
+
+        let chartData = [];
+        try {
+            chartData = JSON.parse(dataElement.textContent);
+        } catch (error) {
+            console.error("Unable to parse anomaly chart data:", error);
+            return;
+        }
+
+        if (!Array.isArray(chartData) || chartData.length === 0) return;
+
+        const labels = chartData.map(item => item.label);
+        const normalValues = chartData.map(item => item.is_anomaly ? null : item.value);
+        const anomalyValues = chartData.map(item => item.is_anomaly ? item.value : null);
+
+        const ctx = canvas.getContext("2d");
+
+        new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "Normal",
+                        data: normalValues,
+                        borderColor: "#4fa3ff",
+                        backgroundColor: "rgba(79, 163, 255, 0.08)",
+                        borderWidth: 2,
+                        pointRadius: 2.5,
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: "#4fa3ff",
+                        pointBorderColor: "#4fa3ff",
+                        tension: 0.28,
+                        spanGaps: true
+                    },
+                    {
+                        label: "Anomaly",
+                        data: anomalyValues,
+                        borderColor: "#ff5263",
+                        backgroundColor: "#ff5263",
+                        borderWidth: 0,
+                        pointRadius: 5,
+                        pointHoverRadius: 7.5,
+                        pointBackgroundColor: "#ff5263",
+                        pointBorderColor: "#ffd4d9",
+                        pointBorderWidth: 1.5,
+                        showLine: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: "index",
+                    intersect: false
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: "rgba(4, 11, 21, 0.96)",
+                        borderColor: "rgba(255, 255, 255, 0.12)",
+                        borderWidth: 1,
+                        titleColor: "#f8fafc",
+                        bodyColor: "#cfe4ff",
+                        padding: 12,
+                        displayColors: true
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: "rgba(255, 255, 255, 0.035)", drawBorder: false },
+                        ticks: {
+                            color: "rgba(190, 208, 229, 0.5)",
+                            maxTicksLimit: 12,
+                            font: { size: 10 }
+                        }
+                    },
+                    y: {
+                        grid: { color: "rgba(255, 255, 255, 0.045)", drawBorder: false },
+                        ticks: {
+                            color: "rgba(190, 208, 229, 0.5)",
+                            font: { size: 10 }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
