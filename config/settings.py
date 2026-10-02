@@ -306,3 +306,20 @@ if not DEBUG:
     SECURE_REFERRER_POLICY = (
         "strict-origin-when-cross-origin"
     )
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+    },
+}
